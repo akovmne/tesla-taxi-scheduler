@@ -1,12 +1,12 @@
 body {
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   background: #0f172a;
   color: white;
   margin: 0;
 }
 
 .container {
-  max-width: 900px;
+  max-width: 1000px;
   margin: auto;
   padding: 20px;
 }
@@ -26,17 +26,16 @@ h1 {
 input {
   width: 100%;
   padding: 10px;
-  margin: 8px 0;
-  border-radius: 6px;
+  margin: 6px 0;
   border: none;
+  border-radius: 6px;
 }
 
 button {
-  background: #38bdf8;
-  color: black;
-  padding: 10px;
-  border: none;
   width: 100%;
+  padding: 10px;
+  background: #38bdf8;
+  border: none;
   font-weight: bold;
   cursor: pointer;
   margin-top: 10px;
@@ -46,9 +45,30 @@ button:hover {
   background: #0ea5e9;
 }
 
-.item {
-  background: #334155;
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #334155;
   padding: 10px;
-  margin-top: 10px;
-  border-radius: 6px;
+  text-align: center;
+}
+
+th {
+  background: #0ea5e9;
+  color: black;
+}
+
+td {
+  background: #334155;
+}
+
+.delete {
+  background: red;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
 }
