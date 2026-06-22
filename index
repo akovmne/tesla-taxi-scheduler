@@ -46,11 +46,3 @@
 <script src="app.js"></script>
 </body>
 </html>
-      <h2>📅 Daily Plan</h2>
-      <div id="list"></div>
-    </div>
-  </div>
-
-  <script src="app.js"></script>
-</body>
-</html>
