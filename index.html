@@ -14,17 +14,17 @@
   <div class="card">
     <h2>🔎 Filter</h2>
 
-    <input id="filterDriver" placeholder="Filter po vozaču">
-    <input id="filterVehicle" placeholder="Filter po vozilu (T-01)">
+    <input id="filterDriver" placeholder="Vozač">
+    <input id="filterVehicle" placeholder="Vozilo (T-01)">
 
-    <label>Od (24h)</label>
+    <label>Vrijeme OD (24h)</label>
     <input id="filterTimeFrom" type="time">
 
-    <label>Do (24h)</label>
+    <label>Vrijeme DO (24h)</label>
     <input id="filterTimeTo" type="time">
 
     <button onclick="renderTable()">🔍 Primijeni filter</button>
-    <button onclick="resetFilter()">♻️ Reset filter</button>
+    <button onclick="resetFilter()">♻️ Reset</button>
   </div>
 
   <!-- INPUT -->
@@ -32,24 +32,22 @@
     <h2>➕ Dodaj unos</h2>
 
     <input id="driver" placeholder="Ime vozača">
-    <input id="vehicle" placeholder="Broj vozila (T-01)">
+    <input id="vehicle" placeholder="Vozilo (T-01)">
     <input id="date" type="date">
 
-    <input id="shift" placeholder="Smjena (npr. 08:00 - 16:00)">
+    <input id="shift" placeholder="Smjena (08:00 - 16:00)">
 
-    <label>Početak punjenja (24h)</label>
+    <label>Početak punjenja</label>
     <input id="chargeStart" type="time">
 
-    <label>Kraj punjenja (24h)</label>
+    <label>Kraj punjenja</label>
     <input id="chargeEnd" type="time">
 
-    <button onclick="addRow()">Dodaj u tabelu</button>
+    <button onclick="addRow()">Dodaj</button>
   </div>
 
   <!-- TABLE -->
   <div class="card">
-    <h2>📅 Raspored</h2>
-
     <table>
       <thead>
         <tr>
