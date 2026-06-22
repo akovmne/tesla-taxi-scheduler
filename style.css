@@ -64,11 +64,3 @@ th {
 td {
   background: #334155;
 }
-
-.delete {
-  background: red;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-}
