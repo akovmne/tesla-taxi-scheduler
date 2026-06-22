@@ -8,11 +8,12 @@ function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
 }
 
+// 🧼 clean display
 function clean(v) {
   return v && v.trim() !== "" ? v : "—";
 }
 
-// ⏰ convert 24h HH:MM → minutes
+// ⏰ convert HH:MM → minutes (24h system)
 function toMinutes(t) {
   if (!t) return null;
   const [h, m] = t.split(":").map(Number);
@@ -20,7 +21,7 @@ function toMinutes(t) {
   return h * 60 + m;
 }
 
-// 🔎 filters
+// 🔎 filters (24h strict)
 function getFilters() {
   return {
     driver: document.getElementById("filterDriver").value.toLowerCase(),
@@ -46,21 +47,21 @@ function renderTable() {
     const matchDriver = item.driver.toLowerCase().includes(f.driver);
     const matchVehicle = item.vehicle.toLowerCase().includes(f.vehicle);
 
+    // collect ALL times in row
+    const times = [
+      toMinutes(item.chargeStart),
+      toMinutes(item.chargeEnd),
+      toMinutes(item.shift?.split(" - ")[0])
+    ].filter(t => t !== null);
+
     let matchTime = true;
 
-    if (fromMin !== null || toMin !== null) {
+    if (fromMin !== null) {
+      matchTime = times.some(t => t >= fromMin);
+    }
 
-      const times = [
-        toMinutes(item.chargeStart),
-        toMinutes(item.chargeEnd),
-        toMinutes(item.shift?.split(" - ")[0])
-      ].filter(t => t !== null);
-
-      matchTime = times.some(t => {
-        if (fromMin !== null && t < fromMin) return false;
-        if (toMin !== null && t > toMin) return false;
-        return true;
-      });
+    if (toMin !== null) {
+      matchTime = matchTime && times.some(t => t <= toMin);
     }
 
     return matchDriver && matchVehicle && matchTime;
@@ -86,7 +87,7 @@ function renderTable() {
   });
 }
 
-// ♻️ reset
+// ♻️ reset filters
 function resetFilter() {
   document.getElementById("filterDriver").value = "";
   document.getElementById("filterVehicle").value = "";
