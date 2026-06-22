@@ -1,14 +1,16 @@
+const KEY = "raspored";
+
 function getData() {
-  return JSON.parse(localStorage.getItem("schedule") || "[]");
+  return JSON.parse(localStorage.getItem(KEY) || "[]");
 }
 
 function saveData(data) {
-  localStorage.setItem("schedule", JSON.stringify(data));
+  localStorage.setItem(KEY, JSON.stringify(data));
 }
 
 function renderTable() {
-  const data = getData();
   const body = document.getElementById("tableBody");
+  const data = getData();
 
   body.innerHTML = "";
 
@@ -20,7 +22,7 @@ function renderTable() {
         <td>${item.shift}</td>
         <td>${item.chargeStart}</td>
         <td>${item.chargeEnd}</td>
-        <td><button class="delete" onclick="deleteRow(${index})">X</button></td>
+        <td><button onclick="deleteRow(${index})">X</button></td>
       </tr>
     `;
   });
@@ -29,12 +31,9 @@ function renderTable() {
 function addRow() {
   const driver = document.getElementById("driver").value;
   const date = document.getElementById("date").value;
-  const shift = document.getElementById("shift").value;
-  const chargeStart = document.getElementById("chargeStart").value;
-  const chargeEnd = document.getElementById("chargeEnd").value;
 
   if (!driver || !date) {
-    alert("Driver and date required");
+    alert("Morate unijeti ime vozača i datum");
     return;
   }
 
@@ -43,9 +42,9 @@ function addRow() {
   data.push({
     driver,
     date,
-    shift,
-    chargeStart,
-    chargeEnd
+    shift: document.getElementById("shift").value,
+    chargeStart: document.getElementById("chargeStart").value,
+    chargeEnd: document.getElementById("chargeEnd").value
   });
 
   saveData(data);
@@ -59,4 +58,4 @@ function deleteRow(index) {
   renderTable();
 }
 
-renderTable();
+window.onload = renderTable;
