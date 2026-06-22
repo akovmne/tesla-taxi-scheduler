@@ -1,11 +1,11 @@
 const KEY = "raspored";
 
-// 📦 Load data from browser storage
+// 📦 Load data
 function getData() {
   return JSON.parse(localStorage.getItem(KEY) || "[]");
 }
 
-// 💾 Save data to browser storage
+// 💾 Save data
 function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
 }
@@ -46,7 +46,7 @@ function renderTable() {
   });
 }
 
-// ➕ Add new row
+// ➕ Add row
 function addRow() {
   const driver = document.getElementById("driver").value;
   const vehicle = document.getElementById("vehicle").value;
@@ -55,9 +55,9 @@ function addRow() {
   const chargeStart = document.getElementById("chargeStart").value;
   const chargeEnd = document.getElementById("chargeEnd").value;
 
-  // Required fields
+  // required fields
   if (!driver.trim() || !vehicle.trim() || !date.trim()) {
-    alert("Morate unijeti: vozača, vozilo i datum");
+    alert("Unesite: vozača, vozilo i datum");
     return;
   }
 
@@ -75,7 +75,7 @@ function addRow() {
   saveData(data);
   renderTable();
 
-  // Clear form after save
+  // clear inputs
   document.getElementById("driver").value = "";
   document.getElementById("vehicle").value = "";
   document.getElementById("date").value = "";
@@ -92,5 +92,5 @@ function deleteRow(index) {
   renderTable();
 }
 
-// 🚀 Init
+// 🚀 init
 window.onload = renderTable;
