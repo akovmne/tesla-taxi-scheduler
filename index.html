@@ -13,8 +13,12 @@
   <!-- FILTER -->
   <div class="card">
     <h2>🔎 Filter</h2>
-    <input id="filterDriver" placeholder="Filter po vozaču" oninput="renderTable()">
-    <input id="filterVehicle" placeholder="Filter po vozilu (npr. T-01)" oninput="renderTable()">
+
+    <input id="filterDriver" placeholder="Filter po vozaču">
+    <input id="filterVehicle" placeholder="Filter po vozilu (npr. T-01)">
+
+    <button onclick="renderTable()">🔍 Primijeni filter</button>
+    <button onclick="resetFilter()">♻️ Reset filter</button>
   </div>
 
   <!-- INPUT -->
