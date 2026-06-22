@@ -1,35 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Tesla Taxi Scheduler</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div class="container">
-    <h1>🚖 Tesla Taxi Driver Scheduler</h1>
+<div class="container">
+  <h1>🚖 Tesla Taxi Charging Schedule</h1>
 
-    <div class="card">
-      <h2>Add Schedule</h2>
+  <div class="card">
+    <h2>Add Entry</h2>
 
-      <label>Driver Name</label>
-      <input type="text" id="driver" placeholder="Enter driver name">
+    <input id="driver" placeholder="Driver name">
+    <input id="date" type="date">
 
-      <label>Date</label>
-      <input type="date" id="date">
+    <input id="shift" placeholder="Shift (e.g. 08:00 - 16:00)">
+    <input id="chargeStart" placeholder="Charging start (e.g. 22:00)">
+    <input id="chargeEnd" placeholder="Charging end (e.g. 02:00)">
 
-      <label>Shift Time</label>
-      <input type="text" id="shift" placeholder="e.g. 08:00 - 16:00">
+    <button onclick="addRow()">Add to Table</button>
+  </div>
 
-      <label>Charging Time (Tesla)</label>
-      <input type="text" id="charge" placeholder="e.g. 22:00 - 01:00">
+  <div class="card">
+    <h2>📅 Daily Charging Table</h2>
 
-      <button onclick="addSchedule()">Save Schedule</button>
-    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Driver</th>
+          <th>Date</th>
+          <th>Shift</th>
+          <th>Charging Start</th>
+          <th>Charging End</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
 
-    <div class="card">
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
       <h2>📅 Daily Plan</h2>
       <div id="list"></div>
     </div>
