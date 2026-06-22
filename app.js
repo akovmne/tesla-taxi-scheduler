@@ -1,25 +1,25 @@
 const KEY = "raspored";
 
-// 📦 load
+// 📦 load data
 function getData() {
   return JSON.parse(localStorage.getItem(KEY) || "[]");
 }
 
-// 💾 save
+// 💾 save data
 function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
 }
 
-// 🧼 clean values
+// 🧼 clean empty values
 function clean(v) {
   return v && v.trim() !== "" ? v : "—";
 }
 
-// 🔎 filters
+// 🔎 get filters
 function getFilters() {
   return {
-    driver: document.getElementById("filterDriver")?.value.toLowerCase() || "",
-    vehicle: document.getElementById("filterVehicle")?.value.toLowerCase() || ""
+    driver: document.getElementById("filterDriver").value.toLowerCase(),
+    vehicle: document.getElementById("filterVehicle").value.toLowerCase()
   };
 }
 
@@ -58,6 +58,13 @@ function renderTable() {
   });
 }
 
+// ♻️ reset filter
+function resetFilter() {
+  document.getElementById("filterDriver").value = "";
+  document.getElementById("filterVehicle").value = "";
+  renderTable();
+}
+
 // ➕ add row
 function addRow() {
   const driver = document.getElementById("driver").value;
@@ -75,7 +82,7 @@ function addRow() {
   const data = getData();
 
   data.push({
-    id: Date.now().toString(), // 🔥 FIX: unique ID
+    id: Date.now().toString(),
     driver: driver.trim(),
     vehicle: vehicle.trim(),
     date,
@@ -87,7 +94,7 @@ function addRow() {
   saveData(data);
   renderTable();
 
-  // clear
+  // clear inputs
   document.getElementById("driver").value = "";
   document.getElementById("vehicle").value = "";
   document.getElementById("date").value = "";
@@ -96,7 +103,7 @@ function addRow() {
   document.getElementById("chargeEnd").value = "";
 }
 
-// ❌ delete (FIXED)
+// ❌ delete
 function deleteRow(id) {
   let data = getData();
   data = data.filter(item => item.id !== id);
@@ -104,5 +111,5 @@ function deleteRow(id) {
   renderTable();
 }
 
-// 🚀 start
+// 🚀 init
 window.onload = renderTable;
