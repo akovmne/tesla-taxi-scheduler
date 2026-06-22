@@ -27,8 +27,8 @@ input {
   width: 100%;
   padding: 10px;
   margin: 6px 0;
-  border: none;
   border-radius: 6px;
+  border: none;
 }
 
 button {
@@ -65,7 +65,7 @@ td {
   background: #334155;
 }
 
-button.delete {
+.delete {
   background: red;
   color: white;
   border: none;
