@@ -1,40 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sr">
 <head>
   <meta charset="UTF-8">
-  <title>Tesla Taxi Scheduler</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Tesla Taxi Raspored</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 
 <div class="container">
-  <h1>🚖 Tesla Taxi Charging Schedule</h1>
+  <h1>🚖 Tesla Taxi – Raspored i Punjenje</h1>
 
   <div class="card">
-    <h2>Add Entry</h2>
+    <h2>Dodaj unos</h2>
 
-    <input id="driver" placeholder="Driver name">
+    <input id="driver" placeholder="Ime vozača">
     <input id="date" type="date">
 
-    <input id="shift" placeholder="Shift (e.g. 08:00 - 16:00)">
-    <input id="chargeStart" placeholder="Charging start (e.g. 22:00)">
-    <input id="chargeEnd" placeholder="Charging end (e.g. 02:00)">
+    <input id="shift" placeholder="Smjena (npr. 08:00 - 16:00)">
+    <input id="chargeStart" placeholder="Početak punjenja (npr. 22:00)">
+    <input id="chargeEnd" placeholder="Kraj punjenja (npr. 02:00)">
 
-    <button onclick="addRow()">Add to Table</button>
+    <button onclick="addRow()">Dodaj u tabelu</button>
   </div>
 
   <div class="card">
-    <h2>📅 Daily Charging Table</h2>
+    <h2>📅 Dnevni raspored punjenja</h2>
 
     <table>
       <thead>
         <tr>
-          <th>Driver</th>
-          <th>Date</th>
-          <th>Shift</th>
-          <th>Charging Start</th>
-          <th>Charging End</th>
-          <th>Action</th>
+          <th>Vozač</th>
+          <th>Datum</th>
+          <th>Smjena</th>
+          <th>Početak punjenja</th>
+          <th>Kraj punjenja</th>
+          <th>Obriši</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -43,6 +43,6 @@
 
 </div>
 
-<script src="app.js"></script>
+<script src="./app.js"></script>
 </body>
 </html>
