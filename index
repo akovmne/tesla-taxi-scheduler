@@ -1,1 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tesla Taxi Scheduler</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
+  <div class="container">
+    <h1>🚖 Tesla Taxi Driver Scheduler</h1>
+
+    <div class="card">
+      <h2>Add Schedule</h2>
+
+      <label>Driver Name</label>
+      <input type="text" id="driver" placeholder="Enter driver name">
+
+      <label>Date</label>
+      <input type="date" id="date">
+
+      <label>Shift Time</label>
+      <input type="text" id="shift" placeholder="e.g. 08:00 - 16:00">
+
+      <label>Charging Time (Tesla)</label>
+      <input type="text" id="charge" placeholder="e.g. 22:00 - 01:00">
+
+      <button onclick="addSchedule()">Save Schedule</button>
+    </div>
+
+    <div class="card">
+      <h2>📅 Daily Plan</h2>
+      <div id="list"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
