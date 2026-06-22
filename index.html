@@ -10,13 +10,18 @@
 <div class="container">
   <h1>🚖 Tesla Taxi – Raspored i Punjenje</h1>
 
-  <!-- FILTERS -->
+  <!-- FILTER -->
   <div class="card">
     <h2>🔎 Filter</h2>
 
     <input id="filterDriver" placeholder="Filter po vozaču">
     <input id="filterVehicle" placeholder="Filter po vozilu (T-01)">
-    <input id="filterTime" placeholder="Filter po vremenu (npr. 22:00 ili 08:00)">
+
+    <label>Od vremena</label>
+    <input id="filterTimeFrom" type="time">
+
+    <label>Do vremena</label>
+    <input id="filterTimeTo" type="time">
 
     <button onclick="renderTable()">🔍 Primijeni filter</button>
     <button onclick="resetFilter()">♻️ Reset filter</button>
@@ -39,7 +44,7 @@
 
   <!-- TABLE -->
   <div class="card">
-    <h2>📅 Dnevni raspored</h2>
+    <h2>📅 Raspored</h2>
 
     <table>
       <thead>
@@ -48,8 +53,8 @@
           <th>Vozilo</th>
           <th>Datum</th>
           <th>Smjena</th>
-          <th>Početak punjenja</th>
-          <th>Kraj punjenja</th>
+          <th>Početak</th>
+          <th>Kraj</th>
           <th>Obriši</th>
         </tr>
       </thead>
