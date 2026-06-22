@@ -18,6 +18,7 @@ function renderTable() {
     body.innerHTML += `
       <tr>
         <td>${item.driver}</td>
+        <td>${item.vehicle}</td>
         <td>${item.date}</td>
         <td>${item.shift}</td>
         <td>${item.chargeStart}</td>
@@ -30,10 +31,11 @@ function renderTable() {
 
 function addRow() {
   const driver = document.getElementById("driver").value;
+  const vehicle = document.getElementById("vehicle").value;
   const date = document.getElementById("date").value;
 
-  if (!driver || !date) {
-    alert("Morate unijeti ime vozača i datum");
+  if (!driver || !vehicle || !date) {
+    alert("Morate unijeti ime vozača, vozilo i datum");
     return;
   }
 
@@ -41,6 +43,7 @@ function addRow() {
 
   data.push({
     driver,
+    vehicle,
     date,
     shift: document.getElementById("shift").value,
     chargeStart: document.getElementById("chargeStart").value,
