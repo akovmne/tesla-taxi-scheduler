@@ -1,25 +1,26 @@
 const KEY = "raspored";
 
-// 📦 load data
+// 📦 load
 function getData() {
   return JSON.parse(localStorage.getItem(KEY) || "[]");
 }
 
-// 💾 save data
+// 💾 save
 function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
 }
 
-// 🧼 clean empty values
+// 🧼 clean values
 function clean(v) {
   return v && v.trim() !== "" ? v : "—";
 }
 
-// 🔎 get filters
+// 🔎 filters
 function getFilters() {
   return {
     driver: document.getElementById("filterDriver").value.toLowerCase(),
-    vehicle: document.getElementById("filterVehicle").value.toLowerCase()
+    vehicle: document.getElementById("filterVehicle").value.toLowerCase(),
+    time: document.getElementById("filterTime").value.toLowerCase()
   };
 }
 
@@ -32,10 +33,20 @@ function renderTable() {
   body.innerHTML = "";
 
   const filtered = data.filter(item => {
-    return (
-      item.driver.toLowerCase().includes(filters.driver) &&
-      item.vehicle.toLowerCase().includes(filters.vehicle)
-    );
+
+    const matchDriver = item.driver.toLowerCase().includes(filters.driver);
+    const matchVehicle = item.vehicle.toLowerCase().includes(filters.vehicle);
+
+    // ⏰ TIME FILTER (search in shift + charging times)
+    const timeText = (
+      (item.shift || "") +
+      (item.chargeStart || "") +
+      (item.chargeEnd || "")
+    ).toLowerCase();
+
+    const matchTime = timeText.includes(filters.time);
+
+    return matchDriver && matchVehicle && matchTime;
   });
 
   if (filtered.length === 0) {
@@ -62,6 +73,7 @@ function renderTable() {
 function resetFilter() {
   document.getElementById("filterDriver").value = "";
   document.getElementById("filterVehicle").value = "";
+  document.getElementById("filterTime").value = "";
   renderTable();
 }
 
@@ -94,7 +106,7 @@ function addRow() {
   saveData(data);
   renderTable();
 
-  // clear inputs
+  // clear
   document.getElementById("driver").value = "";
   document.getElementById("vehicle").value = "";
   document.getElementById("date").value = "";
@@ -111,5 +123,5 @@ function deleteRow(id) {
   renderTable();
 }
 
-// 🚀 init
+// 🚀 start
 window.onload = renderTable;
