@@ -10,9 +10,17 @@ function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
 }
 
-// 🧼 clean values
+// 🧼 clean
 function clean(v) {
   return v && v.trim() !== "" ? v : "—";
+}
+
+// ⏰ convert HH:MM → minutes
+function toMinutes(t) {
+  if (!t) return null;
+  const parts = t.split(":");
+  if (parts.length < 2) return null;
+  return parseInt(parts[0]) * 60 + parseInt(parts[1]);
 }
 
 // 🔎 filters
@@ -20,7 +28,8 @@ function getFilters() {
   return {
     driver: document.getElementById("filterDriver").value.toLowerCase(),
     vehicle: document.getElementById("filterVehicle").value.toLowerCase(),
-    time: document.getElementById("filterTime").value.toLowerCase()
+    from: document.getElementById("filterTimeFrom").value,
+    to: document.getElementById("filterTimeTo").value
   };
 }
 
@@ -28,23 +37,35 @@ function getFilters() {
 function renderTable() {
   const body = document.getElementById("tableBody");
   const data = getData();
-  const filters = getFilters();
+  const f = getFilters();
 
   body.innerHTML = "";
 
+  const fromMin = toMinutes(f.from);
+  const toMin = toMinutes(f.to);
+
   const filtered = data.filter(item => {
 
-    const matchDriver = item.driver.toLowerCase().includes(filters.driver);
-    const matchVehicle = item.vehicle.toLowerCase().includes(filters.vehicle);
+    const matchDriver = item.driver.toLowerCase().includes(f.driver);
+    const matchVehicle = item.vehicle.toLowerCase().includes(f.vehicle);
 
-    // ⏰ TIME FILTER (search in shift + charging times)
-    const timeText = (
-      (item.shift || "") +
-      (item.chargeStart || "") +
-      (item.chargeEnd || "")
-    ).toLowerCase();
+    // time check
+    let matchTime = true;
 
-    const matchTime = timeText.includes(filters.time);
+    if (fromMin !== null || toMin !== null) {
+
+      const times = [
+        toMinutes(item.chargeStart),
+        toMinutes(item.chargeEnd),
+        toMinutes(item.shift?.split(" - ")[0])
+      ].filter(t => t !== null);
+
+      matchTime = times.some(t => {
+        if (fromMin !== null && t < fromMin) return false;
+        if (toMin !== null && t > toMin) return false;
+        return true;
+      });
+    }
 
     return matchDriver && matchVehicle && matchTime;
   });
@@ -73,11 +94,12 @@ function renderTable() {
 function resetFilter() {
   document.getElementById("filterDriver").value = "";
   document.getElementById("filterVehicle").value = "";
-  document.getElementById("filterTime").value = "";
+  document.getElementById("filterTimeFrom").value = "";
+  document.getElementById("filterTimeTo").value = "";
   renderTable();
 }
 
-// ➕ add row
+// ➕ add
 function addRow() {
   const driver = document.getElementById("driver").value;
   const vehicle = document.getElementById("vehicle").value;
@@ -106,7 +128,6 @@ function addRow() {
   saveData(data);
   renderTable();
 
-  // clear
   document.getElementById("driver").value = "";
   document.getElementById("vehicle").value = "";
   document.getElementById("date").value = "";
@@ -123,5 +144,4 @@ function deleteRow(id) {
   renderTable();
 }
 
-// 🚀 start
 window.onload = renderTable;
