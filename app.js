@@ -1,37 +1,49 @@
 const KEY = "raspored";
 
-// 📦 Load data
+// 📦 load
 function getData() {
   return JSON.parse(localStorage.getItem(KEY) || "[]");
 }
 
-// 💾 Save data
+// 💾 save
 function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
 }
 
-// 🧼 Clean empty values
-function clean(value) {
-  return value && value.trim() !== "" ? value : "—";
+// 🧼 clean values
+function clean(v) {
+  return v && v.trim() !== "" ? v : "—";
 }
 
-// 📊 Render table
+// 🔎 filters
+function getFilters() {
+  return {
+    driver: document.getElementById("filterDriver")?.value.toLowerCase() || "",
+    vehicle: document.getElementById("filterVehicle")?.value.toLowerCase() || ""
+  };
+}
+
+// 📊 render table
 function renderTable() {
   const body = document.getElementById("tableBody");
   const data = getData();
+  const filters = getFilters();
 
   body.innerHTML = "";
 
-  if (data.length === 0) {
-    body.innerHTML = `
-      <tr>
-        <td colspan="7">Nema unosa</td>
-      </tr>
-    `;
+  const filtered = data.filter(item => {
+    return (
+      item.driver.toLowerCase().includes(filters.driver) &&
+      item.vehicle.toLowerCase().includes(filters.vehicle)
+    );
+  });
+
+  if (filtered.length === 0) {
+    body.innerHTML = `<tr><td colspan="7">Nema rezultata</td></tr>`;
     return;
   }
 
-  data.forEach((item, index) => {
+  filtered.forEach(item => {
     body.innerHTML += `
       <tr>
         <td>${clean(item.driver)}</td>
@@ -40,13 +52,13 @@ function renderTable() {
         <td>${clean(item.shift)}</td>
         <td>${clean(item.chargeStart)}</td>
         <td>${clean(item.chargeEnd)}</td>
-        <td><button onclick="deleteRow(${index})">X</button></td>
+        <td><button onclick="deleteRow('${item.id}')">X</button></td>
       </tr>
     `;
   });
 }
 
-// ➕ Add row
+// ➕ add row
 function addRow() {
   const driver = document.getElementById("driver").value;
   const vehicle = document.getElementById("vehicle").value;
@@ -55,15 +67,15 @@ function addRow() {
   const chargeStart = document.getElementById("chargeStart").value;
   const chargeEnd = document.getElementById("chargeEnd").value;
 
-  // required fields
   if (!driver.trim() || !vehicle.trim() || !date.trim()) {
-    alert("Unesite: vozača, vozilo i datum");
+    alert("Unesite vozača, vozilo i datum");
     return;
   }
 
   const data = getData();
 
   data.push({
+    id: Date.now().toString(), // 🔥 FIX: unique ID
     driver: driver.trim(),
     vehicle: vehicle.trim(),
     date,
@@ -75,7 +87,7 @@ function addRow() {
   saveData(data);
   renderTable();
 
-  // clear inputs
+  // clear
   document.getElementById("driver").value = "";
   document.getElementById("vehicle").value = "";
   document.getElementById("date").value = "";
@@ -84,13 +96,13 @@ function addRow() {
   document.getElementById("chargeEnd").value = "";
 }
 
-// ❌ Delete row
-function deleteRow(index) {
-  const data = getData();
-  data.splice(index, 1);
+// ❌ delete (FIXED)
+function deleteRow(id) {
+  let data = getData();
+  data = data.filter(item => item.id !== id);
   saveData(data);
   renderTable();
 }
 
-// 🚀 init
+// 🚀 start
 window.onload = renderTable;
