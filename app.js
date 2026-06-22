@@ -8,12 +8,32 @@ function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
 }
 
-// 🧼 clean display
+// 🧼 display helper
 function clean(v) {
   return v && v.trim() !== "" ? v : "—";
 }
 
-// ⏰ convert HH:MM → minutes (24h system)
+// ⏰ FORCE 24h formatting (important fix)
+function formatTime24(t) {
+  if (!t) return "—";
+
+  // already 24h like "14:30"
+  const match = t.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return t; // fallback
+
+  let h = parseInt(match[1], 10);
+  let m = parseInt(match[2], 10);
+
+  if (isNaN(h) || isNaN(m)) return t;
+
+  // normalize
+  h = Math.max(0, Math.min(23, h));
+  m = Math.max(0, Math.min(59, m));
+
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+// ⏰ convert for filtering
 function toMinutes(t) {
   if (!t) return null;
   const [h, m] = t.split(":").map(Number);
@@ -21,7 +41,7 @@ function toMinutes(t) {
   return h * 60 + m;
 }
 
-// 🔎 filters (24h strict)
+// 🔎 filters
 function getFilters() {
   return {
     driver: document.getElementById("filterDriver").value.toLowerCase(),
@@ -47,7 +67,6 @@ function renderTable() {
     const matchDriver = item.driver.toLowerCase().includes(f.driver);
     const matchVehicle = item.vehicle.toLowerCase().includes(f.vehicle);
 
-    // collect ALL times in row
     const times = [
       toMinutes(item.chargeStart),
       toMinutes(item.chargeEnd),
@@ -79,8 +98,11 @@ function renderTable() {
         <td>${clean(item.vehicle)}</td>
         <td>${clean(item.date)}</td>
         <td>${clean(item.shift)}</td>
-        <td>${clean(item.chargeStart)}</td>
-        <td>${clean(item.chargeEnd)}</td>
+
+        <!-- 🔥 FORCE 24H DISPLAY HERE -->
+        <td>${formatTime24(item.chargeStart)}</td>
+        <td>${formatTime24(item.chargeEnd)}</td>
+
         <td><button onclick="deleteRow('${item.id}')">X</button></td>
       </tr>
     `;
