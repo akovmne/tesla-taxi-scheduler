@@ -1,26 +1,23 @@
 const KEY = "raspored";
 
-// 📦 load
 function getData() {
   return JSON.parse(localStorage.getItem(KEY) || "[]");
 }
 
-// 💾 save
 function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
 }
 
-// 🧼 clean
 function clean(v) {
   return v && v.trim() !== "" ? v : "—";
 }
 
-// ⏰ convert HH:MM → minutes
+// ⏰ convert 24h HH:MM → minutes
 function toMinutes(t) {
   if (!t) return null;
-  const parts = t.split(":");
-  if (parts.length < 2) return null;
-  return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  const [h, m] = t.split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) return null;
+  return h * 60 + m;
 }
 
 // 🔎 filters
@@ -49,7 +46,6 @@ function renderTable() {
     const matchDriver = item.driver.toLowerCase().includes(f.driver);
     const matchVehicle = item.vehicle.toLowerCase().includes(f.vehicle);
 
-    // time check
     let matchTime = true;
 
     if (fromMin !== null || toMin !== null) {
@@ -90,7 +86,7 @@ function renderTable() {
   });
 }
 
-// ♻️ reset filter
+// ♻️ reset
 function resetFilter() {
   document.getElementById("filterDriver").value = "";
   document.getElementById("filterVehicle").value = "";
@@ -99,7 +95,7 @@ function resetFilter() {
   renderTable();
 }
 
-// ➕ add
+// ➕ add row
 function addRow() {
   const driver = document.getElementById("driver").value;
   const vehicle = document.getElementById("vehicle").value;
