@@ -6,7 +6,7 @@ body {
 }
 
 .container {
-  max-width: 1000px;
+  max-width: 1100px;
   margin: auto;
   padding: 20px;
 }
@@ -29,6 +29,7 @@ input {
   margin: 6px 0;
   border-radius: 6px;
   border: none;
+  box-sizing: border-box;
 }
 
 button {
@@ -50,7 +51,8 @@ table {
   border-collapse: collapse;
 }
 
-th, td {
+th,
+td {
   border: 1px solid #334155;
   padding: 10px;
   text-align: center;
@@ -59,6 +61,12 @@ th, td {
 th {
   background: #0ea5e9;
   color: black;
+  cursor: pointer;
+  user-select: none;
+}
+
+th:hover {
+  background: #0284c7;
 }
 
 td {
