@@ -1,3 +1,12 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyA_wcdHfOVXJkS4Sm6ihjhaeGyrRjH9r1w",
+  authDomain: "tesla-punjaci.firebaseapp.com",
+  databaseURL: "https://tesla-punjaci-default-rtdb.firebaseio.com",
+  projectId: "tesla-punjaci",
+  storageBucket: "tesla-punjaci.firebasestorage.app",
+  messagingSenderId: "140620994358",
+  appId: "1:140620994358:web:9bd2cbeaee436edea00597"
+};
 // URL tačno podešen za američki server tvog Firebase projekta "tesla-punjaci"
 const FIREBASE_URL = "https://tesla-punjaci-default-rtdb.firebaseio.com/";
 
