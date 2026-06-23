@@ -4,13 +4,11 @@ let currentSort = "";
 let sortDirection = "asc";
 let fpInstances = [];
 
-// Pokretanje skripte kada se stranica učita
 window.onload = function() {
   initTimePickers();
   renderTable();
 };
 
-// Inicijalizacija 24h birača vremena bez otvaranja sistemske tastature
 function initTimePickers() {
   fpInstances.forEach(instance => instance.destroy());
   fpInstances = [];
@@ -21,7 +19,11 @@ function initTimePickers() {
     dateFormat: "H:i",
     time_24hr: true,
     minuteIncrement: 5, 
-    disableMobile: "true" // Prisili custom pop-up i na telefonima za bolju kontrolu
+    disableMobile: "true",
+    onChange: function() {
+      // Automatski filtriraj tabelu kada se promeni vreme u filteru
+      renderTable();
+    }
   });
   
   fpInstances = Array.isArray(instances) ? instances : [instances];
@@ -57,9 +59,9 @@ function toMinutes(t) {
 
 function getFilters() {
   return {
-    driver: document.getElementById("filterDriver").value.toLowerCase(),
-    vehicle: document.getElementById("filterVehicle").value.toLowerCase(),
-    shift: document.getElementById("filterShift").value.toLowerCase(),
+    driver: document.getElementById("filterDriver").value.toLowerCase().trim(),
+    vehicle: document.getElementById("filterVehicle").value.toLowerCase().trim(),
+    shift: document.getElementById("filterShift").value.toLowerCase().trim(),
     from: document.getElementById("filterTimeFrom").value,
     to: document.getElementById("filterTimeTo").value
   };
@@ -97,9 +99,11 @@ function renderTable() {
   const toMin = toMinutes(f.to);
 
   let filtered = data.filter(item => {
-    const matchDriver = item.driver.toLowerCase().includes(f.driver);
-    const matchVehicle = item.vehicle.toLowerCase().includes(f.vehicle);
-    const matchShift = (item.shift || "").toLowerCase().includes(f.shift);
+    const matchDriver = String(item.driver || "").toLowerCase().includes(f.driver);
+    const matchVehicle = String(item.vehicle || "").toLowerCase().includes(f.vehicle);
+    
+    // Osigurana tačna provera za smjenu (radi i za brojeve i za tekst)
+    const matchShift = String(item.shift || "").toLowerCase().includes(f.shift);
 
     const times = [
       toMinutes(item.chargeStart),
