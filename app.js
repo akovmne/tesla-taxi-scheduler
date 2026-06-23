@@ -59,6 +59,7 @@ function getFilters() {
   return {
     driver: document.getElementById("filterDriver").value.toLowerCase(),
     vehicle: document.getElementById("filterVehicle").value.toLowerCase(),
+    shift: document.getElementById("filterShift").value.toLowerCase(),
     from: document.getElementById("filterTimeFrom").value,
     to: document.getElementById("filterTimeTo").value
   };
@@ -98,6 +99,7 @@ function renderTable() {
   let filtered = data.filter(item => {
     const matchDriver = item.driver.toLowerCase().includes(f.driver);
     const matchVehicle = item.vehicle.toLowerCase().includes(f.vehicle);
+    const matchShift = (item.shift || "").toLowerCase().includes(f.shift);
 
     const times = [
       toMinutes(item.chargeStart),
@@ -113,7 +115,7 @@ function renderTable() {
       matchTime = matchTime && times.some(t => t <= toMin);
     }
 
-    return matchDriver && matchVehicle && matchTime;
+    return matchDriver && matchVehicle && matchShift && matchTime;
   });
 
   if (currentSort) {
@@ -136,7 +138,6 @@ function renderTable() {
   }
 
   filtered.forEach(item => {
-    // data-label se mapira direktno na CSS kako bi tabela postala čitljiva na malom ekranu
     body.innerHTML += `
       <tr>
         <td data-label="Vozač">${clean(item.driver)}</td>
@@ -156,8 +157,8 @@ function renderTable() {
 function resetFilter() {
   document.getElementById("filterDriver").value = "";
   document.getElementById("filterVehicle").value = "";
+  document.getElementById("filterShift").value = "";
   
-  // Bezbedno čišćenje flatpickr polja
   if (document.getElementById("filterTimeFrom")._flatpickr) {
     document.getElementById("filterTimeFrom")._flatpickr.clear();
   }
@@ -196,13 +197,11 @@ function addRow() {
   saveData(data);
   renderTable();
 
-  // Reset tekstualnih polja
   document.getElementById("driver").value = "";
   document.getElementById("vehicle").value = "";
   document.getElementById("date").value = "";
   document.getElementById("shift").value = "";
   
-  // Reset digitalnih birača vremena
   if (document.getElementById("chargeStart")._flatpickr) {
     document.getElementById("chargeStart")._flatpickr.clear();
   }
