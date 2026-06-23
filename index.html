@@ -66,21 +66,23 @@
   </div>
 
   <div class="card table-card">
-    <table class="responsive-table">
-      <thead>
-        <tr>
-          <th onclick="sortTable('driver')" style="cursor: pointer;">Vozač ↕</th>
-          <th onclick="sortTable('vehicle')" style="cursor: pointer;">Vozilo ↕</th>
-          <th onclick="sortTable('date')" style="cursor: pointer;">Datum ↕</th>
-          <th onclick="sortTable('shift')" style="cursor: pointer;">Smjena ↕</th>
-          <th onclick="sortTable('chargeStart')" style="cursor: pointer;">Početak ↕</th>
-          <th onclick="sortTable('chargeEnd')" style="cursor: pointer;">Kraj ↕</th>
-          <th>Briši</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody">
-        </tbody>
-    </table>
+    <div class="table-wrapper">
+      <table class="responsive-table">
+        <thead>
+          <tr>
+            <th onclick="sortTable('driver')">Vozač ↕</th>
+            <th onclick="sortTable('vehicle')">Vozilo ↕</th>
+            <th onclick="sortTable('date')">Datum ↕</th>
+            <th onclick="sortTable('shift')">Smjena ↕</th>
+            <th onclick="sortTable('chargeStart')">Početak ↕</th>
+            <th onclick="sortTable('chargeEnd')">Kraj ↕</th>
+            <th>Akcija</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          </tbody>
+      </table>
+    </div>
   </div>
 
 </div>
