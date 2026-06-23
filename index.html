@@ -42,13 +42,17 @@
   <div class="card">
     <h2>➕ Dodaj unos</h2>
     <div class="grid-inputs">
-      <input id="driver" placeholder="Ime vozača">
-      <input id="vehicle" placeholder="Vozilo (T-01)">
+      <input id="driver" placeholder="Ime vozača" list="driversList">
+      <datalist id="driversList"></datalist>
+
+      <input id="vehicle" placeholder="Vozilo (T-01)" list="vehiclesList">
+      <datalist id="vehiclesList"></datalist>
     </div>
     
     <div class="grid-inputs">
       <input id="date" type="date">
-      <input id="shift" placeholder="Smjena (1, 2 ili 07:00 - 15:00)">
+      <input id="shift" placeholder="Smjena (1, 2 ili medju)" list="shiftsList">
+      <datalist id="shiftsList"></datalist>
     </div>
 
     <div class="grid-inputs">
@@ -66,6 +70,7 @@
   </div>
 
   <div class="card table-card">
+    <h2>📋 Glavni raspored</h2>
     <table class="responsive-table">
       <thead>
         <tr>
@@ -79,6 +84,20 @@
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="card table-card">
+    <h2>👥 SMJENE</h2>
+    <table class="responsive-table">
+      <thead>
+        <tr>
+          <th>Ime vozača</th>
+          <th>Broj vozila</th>
+          <th>Smjena</th>
+        </tr>
+      </thead>
+      <tbody id="driversTableBody"></tbody>
     </table>
   </div>
 
