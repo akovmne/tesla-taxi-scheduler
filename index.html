@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Tesla Taxi Raspored</title>
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./style-2.css">
   <style>
-    /* Analog clock styles */
+    /* Digital Time Picker Styles */
     #timePickerModal {
       display: none;
       position: fixed;
@@ -14,7 +14,7 @@
       top: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0, 0, 0, 0.8);
+      background-color: rgba(0, 0, 0, 0.85);
       align-items: center;
       justify-content: center;
     }
@@ -22,46 +22,44 @@
     #timePickerContent {
       background: #1e293b;
       padding: 25px;
-      border-radius: 15px;
+      border-radius: 12px;
+      width: 300px;
       text-align: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      max-width: 340px;
-      width: 100%;
-    }
-
-    #clockCanvas {
-      border: 12px solid #334155;
-      border-radius: 50%;
-      background: #0f172a;
-      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     }
 
     .time-picker-header {
-      margin-bottom: 15px;
       color: #38bdf8;
-      font-size: 1.2em;
+      font-size: 1.3em;
+      margin-bottom: 20px;
     }
 
-    .time-display {
-      font-size: 2.2em;
-      font-weight: bold;
-      margin: 15px 0;
+    .time-selects {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    select {
+      padding: 12px;
+      font-size: 1.4em;
+      background: #334155;
       color: white;
-      letter-spacing: 4px;
+      border: none;
+      border-radius: 8px;
+      width: 100px;
     }
 
     .time-picker-buttons {
       display: flex;
       gap: 10px;
-      margin-top: 20px;
+      margin-top: 25px;
     }
 
     .time-picker-buttons button {
       flex: 1;
-    }
-
-    .hand {
-      transition: transform 0.1s ease-out;
+      padding: 12px;
     }
   </style>
 </head>
@@ -73,7 +71,6 @@
 
   <div class="card">
     <h2>🔎 Filter</h2>
-
     <input id="filterDriver" placeholder="Vozač">
     <input id="filterVehicle" placeholder="Vozilo (T-01)">
 
@@ -89,13 +86,9 @@
 
   <div class="card">
     <h2>➕ Dodaj unos</h2>
-
     <input id="driver" placeholder="Ime vozača">
-
     <input id="vehicle" placeholder="Vozilo (T-01)">
-
     <input id="date" type="date">
-
     <input id="shift" placeholder="Smjena (08:00 - 16:00)">
 
     <label>Početak punjenja</label>
@@ -120,29 +113,32 @@
           <th>Obriši</th>
         </tr>
       </thead>
-
       <tbody id="tableBody"></tbody>
-
     </table>
   </div>
 
 </div>
 
-<!-- Analog 24h Time Picker Modal -->
+<!-- Digital Time Picker Modal -->
 <div id="timePickerModal">
   <div id="timePickerContent">
-    <div class="time-picker-header">Odaberi vrijeme (24h)</div>
-    <canvas id="clockCanvas" width="280" height="280"></canvas>
-    <div id="selectedTime" class="time-display">00:00</div>
+    <div class="time-picker-header">Odaberi vrijeme</div>
     
+    <div class="time-selects">
+      <select id="hourSelect"></select>
+      <span style="font-size:2em;color:#64748b;">:</span>
+      <select id="minuteSelect"></select>
+    </div>
+
     <div class="time-picker-buttons">
+      <button onclick="setNowTime()">Sada</button>
       <button onclick="cancelTimePicker()">Otkaži</button>
       <button onclick="confirmTimePicker()" style="background:#22c55e;">Potvrdi</button>
     </div>
   </div>
 </div>
 
-<script src="./app.js"></script>
+<script src="./app-2.js"></script>
 
 </body>
 </html>
