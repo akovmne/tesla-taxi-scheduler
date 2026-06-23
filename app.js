@@ -1,5 +1,8 @@
 const KEY = "raspored";
 
+let currentSort = "";
+let sortDirection = "asc";
+
 function getData() {
   return JSON.parse(localStorage.getItem(KEY) || "[]");
 }
@@ -8,40 +11,33 @@ function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
 }
 
-// 🧼 safe display
 function clean(v) {
   return v && v.trim() !== "" ? v : "—";
 }
 
-// ⏰ STRICT 24H NORMALIZER (NO AM/PM POSSIBLE)
 function format24(time) {
   if (!time) return "—";
 
-  // extract HH:MM only
   const match = time.match(/^(\d{1,2}):(\d{2})/);
+
   if (!match) return time;
 
   let h = parseInt(match[1], 10);
   let m = parseInt(match[2], 10);
 
-  if (isNaN(h) || isNaN(m)) return time;
-
-  // force 24h bounds
-  h = Math.max(0, Math.min(23, h));
-  m = Math.max(0, Math.min(59, m));
-
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-// ⏰ convert for filtering
 function toMinutes(t) {
   if (!t) return null;
+
   const [h, m] = t.split(":").map(Number);
+
   if (isNaN(h) || isNaN(m)) return null;
+
   return h * 60 + m;
 }
 
-// 🔎 filters
 function getFilters() {
   return {
     driver: document.getElementById("filterDriver").value.toLowerCase(),
@@ -51,10 +47,43 @@ function getFilters() {
   };
 }
 
-// 📊 render table
+function sortTable(column) {
+
+  if (currentSort === column) {
+    sortDirection =
+      sortDirection === "asc" ? "desc" : "asc";
+  } else {
+    currentSort = column;
+    sortDirection = "asc";
+  }
+
+  renderTable();
+}
+
+function compareValues(a, b) {
+
+  a = a || "";
+  b = b || "";
+
+  a = String(a).toLowerCase();
+  b = String(b).toLowerCase();
+
+  if (a < b)
+    return sortDirection === "asc" ? -1 : 1;
+
+  if (a > b)
+    return sortDirection === "asc" ? 1 : -1;
+
+  return 0;
+}
+
 function renderTable() {
-  const body = document.getElementById("tableBody");
+
+  const body =
+    document.getElementById("tableBody");
+
   const data = getData();
+
   const f = getFilters();
 
   body.innerHTML = "";
@@ -62,73 +91,157 @@ function renderTable() {
   const fromMin = toMinutes(f.from);
   const toMin = toMinutes(f.to);
 
-  const filtered = data.filter(item => {
+  let filtered = data.filter(item => {
 
-    const matchDriver = item.driver.toLowerCase().includes(f.driver);
-    const matchVehicle = item.vehicle.toLowerCase().includes(f.vehicle);
+    const matchDriver =
+      item.driver.toLowerCase().includes(f.driver);
+
+    const matchVehicle =
+      item.vehicle.toLowerCase().includes(f.vehicle);
 
     const times = [
       toMinutes(item.chargeStart),
-      toMinutes(item.chargeEnd),
-      toMinutes(item.shift?.split(" - ")[0])
+      toMinutes(item.chargeEnd)
     ].filter(t => t !== null);
 
     let matchTime = true;
 
     if (fromMin !== null) {
-      matchTime = times.some(t => t >= fromMin);
+      matchTime =
+        times.some(t => t >= fromMin);
     }
 
     if (toMin !== null) {
-      matchTime = matchTime && times.some(t => t <= toMin);
+      matchTime =
+        matchTime &&
+        times.some(t => t <= toMin);
     }
 
-    return matchDriver && matchVehicle && matchTime;
+    return (
+      matchDriver &&
+      matchVehicle &&
+      matchTime
+    );
   });
 
+  if (currentSort) {
+
+    filtered.sort((a, b) => {
+
+      switch (currentSort) {
+
+        case "driver":
+          return compareValues(
+            a.driver,
+            b.driver
+          );
+
+        case "vehicle":
+          return compareValues(
+            a.vehicle,
+            b.vehicle
+          );
+
+        case "date":
+          return compareValues(
+            a.date,
+            b.date
+          );
+
+        case "shift":
+          return compareValues(
+            a.shift,
+            b.shift
+          );
+
+        case "chargeStart":
+          return compareValues(
+            a.chargeStart,
+            b.chargeStart
+          );
+
+        case "chargeEnd":
+          return compareValues(
+            a.chargeEnd,
+            b.chargeEnd
+          );
+
+        default:
+          return 0;
+      }
+    });
+  }
+
   if (filtered.length === 0) {
-    body.innerHTML = `<tr><td colspan="7">Nema rezultata</td></tr>`;
+
+    body.innerHTML =
+      `<tr>
+        <td colspan="7">
+          Nema rezultata
+        </td>
+      </tr>`;
+
     return;
   }
 
   filtered.forEach(item => {
+
     body.innerHTML += `
       <tr>
         <td>${clean(item.driver)}</td>
         <td>${clean(item.vehicle)}</td>
         <td>${clean(item.date)}</td>
-
-        <!-- 🚖 FORCE 24H DISPLAY HERE -->
         <td>${clean(item.shift)}</td>
         <td>${format24(item.chargeStart)}</td>
         <td>${format24(item.chargeEnd)}</td>
-
-        <td><button onclick="deleteRow('${item.id}')">X</button></td>
+        <td>
+          <button onclick="deleteRow('${item.id}')">
+            X
+          </button>
+        </td>
       </tr>
     `;
   });
 }
 
-// ♻️ reset
 function resetFilter() {
+
   document.getElementById("filterDriver").value = "";
   document.getElementById("filterVehicle").value = "";
   document.getElementById("filterTimeFrom").value = "";
   document.getElementById("filterTimeTo").value = "";
+
   renderTable();
 }
 
-// ➕ add
 function addRow() {
-  const driver = document.getElementById("driver").value;
-  const vehicle = document.getElementById("vehicle").value;
-  const date = document.getElementById("date").value;
-  const shift = document.getElementById("shift").value;
-  const chargeStart = document.getElementById("chargeStart").value;
-  const chargeEnd = document.getElementById("chargeEnd").value;
 
-  if (!driver.trim() || !vehicle.trim() || !date.trim()) {
-    alert("Unesite vozača, vozilo i datum");
+  const driver =
+    document.getElementById("driver").value;
+
+  const vehicle =
+    document.getElementById("vehicle").value;
+
+  const date =
+    document.getElementById("date").value;
+
+  const shift =
+    document.getElementById("shift").value;
+
+  const chargeStart =
+    document.getElementById("chargeStart").value;
+
+  const chargeEnd =
+    document.getElementById("chargeEnd").value;
+
+  if (
+    !driver.trim() ||
+    !vehicle.trim() ||
+    !date.trim()
+  ) {
+    alert(
+      "Unesite vozača, vozilo i datum"
+    );
     return;
   }
 
@@ -140,11 +253,12 @@ function addRow() {
     vehicle: vehicle.trim(),
     date,
     shift: shift.trim(),
-    chargeStart: chargeStart.trim(),
-    chargeEnd: chargeEnd.trim()
+    chargeStart,
+    chargeEnd
   });
 
   saveData(data);
+
   renderTable();
 
   document.getElementById("driver").value = "";
@@ -155,11 +269,16 @@ function addRow() {
   document.getElementById("chargeEnd").value = "";
 }
 
-// ❌ delete
 function deleteRow(id) {
+
   let data = getData();
-  data = data.filter(item => item.id !== id);
+
+  data = data.filter(
+    item => item.id !== id
+  );
+
   saveData(data);
+
   renderTable();
 }
 
