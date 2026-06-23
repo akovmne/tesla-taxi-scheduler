@@ -1,3 +1,4 @@
+// Konfiguracija tvog Firebase projekta
 const firebaseConfig = {
   apiKey: "AIzaSyA_wcdHfOVXJkS4Sm6ihjhaeGyrRjH9r1w",
   authDomain: "tesla-punjaci.firebaseapp.com",
@@ -7,6 +8,7 @@ const firebaseConfig = {
   messagingSenderId: "140620994358",
   appId: "1:140620994358:web:9bd2cbeaee436edea00597"
 };
+
 // Inicijalizacija baze podataka preko punog Config-a
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
@@ -21,7 +23,7 @@ let globalData = [];
 window.onload = function() {
   initTimePickers();
   
-  // Sinhronizacija u realnom vremenu na SVI uređajima istovremeno
+  // Sinhronizacija u realnom vremenu na svim uređajima istovremeno
   dbRef.on("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     
@@ -76,12 +78,18 @@ function toMinutes(t) {
 }
 
 function getFilters() {
+  const driverEl = document.getElementById("filterDriver");
+  const vehicleEl = document.getElementById("filterVehicle");
+  const shiftEl = document.getElementById("filterShift");
+  const fromEl = document.getElementById("filterTimeFrom");
+  const toEl = document.getElementById("filterTimeTo");
+
   return {
-    driver: document.getElementById("filterDriver").value.toLowerCase().trim(),
-    vehicle: document.getElementById("filterVehicle").value.toLowerCase().trim(),
-    shift: document.getElementById("filterShift").value.toLowerCase().trim(),
-    from: document.getElementById("filterTimeFrom").value,
-    to: document.getElementById("filterTimeTo").value
+    driver: driverEl ? driverEl.value.toLowerCase().trim() : "",
+    vehicle: vehicleEl ? vehicleEl.value.toLowerCase().trim() : "",
+    shift: shiftEl ? shiftEl.value.toLowerCase().trim() : "",
+    from: fromEl ? fromEl.value : "",
+    to: toEl ? toEl.value : ""
   };
 }
 
@@ -95,9 +103,17 @@ function sortTable(column) {
   renderTable();
 }
 
-function compareValues(a, b) {
+// Stabilna funkcija poređenja prilagođena za desktop i mobilne pretraživače
+function compareValues(a, b, isDate = false) {
   a = a || "";
   b = b || "";
+
+  if (isDate) {
+    const timeA = a ? new Date(a).getTime() : 0;
+    const timeB = b ? new Date(b).getTime() : 0;
+    return sortDirection === "asc" ? timeA - timeB : timeB - timeA;
+  }
+
   a = String(a).toLowerCase();
   b = String(b).toLowerCase();
 
@@ -108,8 +124,9 @@ function compareValues(a, b) {
 
 function renderTable() {
   const body = document.getElementById("tableBody");
-  const f = getFilters();
+  if (!body) return;
 
+  const f = getFilters();
   body.innerHTML = "";
 
   const fromMin = toMinutes(f.from);
@@ -139,20 +156,15 @@ function renderTable() {
 
   if (currentSort) {
     filtered.sort((a, b) => {
-      switch (currentSort) {
-        case "driver": return compareValues(a.driver, b.driver);
-        case "vehicle": return compareValues(a.vehicle, b.vehicle);
-        case "date": return compareValues(a.date, b.date);
-        case "shift": return compareValues(a.shift, b.shift);
-        case "chargeStart": return compareValues(a.chargeStart, b.chargeStart);
-        case "chargeEnd": return compareValues(a.chargeEnd, b.chargeEnd);
-        default: return 0;
+      if (currentSort === "date") {
+        return compareValues(a.date, b.date, true);
       }
+      return compareValues(a[currentSort], b[currentSort], false);
     });
   }
 
   if (filtered.length === 0) {
-    body.innerHTML = `<tr><td colspan="7" style="text-align:center;">Nema rezultata</td></tr>`;
+    body.innerHTML = `<tr><td colspan="7" style="text-align:center; background:#1e293b;">Nema rezultata</td></tr>`;
     return;
   }
 
@@ -174,14 +186,14 @@ function renderTable() {
 }
 
 function resetFilter() {
-  document.getElementById("filterDriver").value = "";
-  document.getElementById("filterVehicle").value = "";
-  document.getElementById("filterShift").value = "";
+  if (document.getElementById("filterDriver")) document.getElementById("filterDriver").value = "";
+  if (document.getElementById("filterVehicle")) document.getElementById("filterVehicle").value = "";
+  if (document.getElementById("filterShift")) document.getElementById("filterShift").value = "";
   
-  if (document.getElementById("filterTimeFrom")._flatpickr) {
+  if (document.getElementById("filterTimeFrom") && document.getElementById("filterTimeFrom")._flatpickr) {
     document.getElementById("filterTimeFrom")._flatpickr.clear();
   }
-  if (document.getElementById("filterTimeTo")._flatpickr) {
+  if (document.getElementById("filterTimeTo") && document.getElementById("filterTimeTo")._flatpickr) {
     document.getElementById("filterTimeTo")._flatpickr.clear();
   }
 
@@ -217,16 +229,18 @@ function addRow() {
   document.getElementById("date").value = "";
   document.getElementById("shift").value = "";
   
-  if (document.getElementById("chargeStart")._flatpickr) {
+  if (document.getElementById("chargeStart") && document.getElementById("chargeStart")._flatpickr) {
     document.getElementById("chargeStart")._flatpickr.clear();
   }
-  if (document.getElementById("chargeEnd")._flatpickr) {
+  if (document.getElementById("chargeEnd") && document.getElementById("chargeEnd")._flatpickr) {
     document.getElementById("chargeEnd")._flatpickr.clear();
   }
 }
 
 function deleteRow(id) {
-  firebase.database().ref("raspored/" + id).remove().catch(function(error) {
-    alert("Greška pri brisanju: " + error.message);
-  });
+  if (confirm("Da li ste sigurni da želite da obrišete ovaj unos?")) {
+    firebase.database().ref("raspored/" + id).remove().catch(function(error) {
+      alert("Greška pri brisanju: " + error.message);
+    });
+  }
 }
