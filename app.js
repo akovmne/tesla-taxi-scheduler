@@ -103,7 +103,7 @@ function sortTable(column) {
   renderTable();
 }
 
-// Stabilna funkcija poređenja prilagođena za desktop i mobilne pretraživače
+// Stabilna funkcija poređenja prilagođena za desktop i mobilne pretraživače (Safari/Chrome)
 function compareValues(a, b, isDate = false) {
   a = a || "";
   b = b || "";
@@ -171,14 +171,14 @@ function renderTable() {
   filtered.forEach(item => {
     body.innerHTML += `
       <tr>
-        <td data-label="Vozač">${clean(item.driver)}</td>
-        <td data-label="Vozilo">${clean(item.vehicle)}</td>
-        <td data-label="Datum">${clean(item.date)}</td>
-        <td data-label="Smjena">${clean(item.shift)}</td>
-        <td data-label="Početak">${format24(item.chargeStart)}</td>
-        <td data-label="Kraj">${format24(item.chargeEnd)}</td>
-        <td data-label="Akcija">
-          <button class="delete-btn" onclick="deleteRow('${item.id}')">X</button>
+        <td>${clean(item.driver)}</td>
+        <td>${clean(item.vehicle)}</td>
+        <td>${clean(item.date)}</td>
+        <td>${clean(item.shift)}</td>
+        <td>${format24(item.chargeStart)}</td>
+        <td>${format24(item.chargeEnd)}</td>
+        <td>
+          <button class="delete-btn" onclick="deleteRow('${item.id}')" style="padding: 4px 8px; margin: 0;">X</button>
         </td>
       </tr>
     `;
