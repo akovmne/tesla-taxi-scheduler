@@ -29,7 +29,7 @@ h1 {
 
 .table-card {
   padding: 10px;
-  overflow-x: auto;
+  overflow-x: auto; /* Omogućava horizontalno skrolovanje */
 }
 
 h2 {
@@ -141,6 +141,7 @@ th, td {
   border: 1px solid #334155;
   padding: 12px 10px;
   text-align: center;
+  white-space: nowrap; /* Sprečava da se tekstovi lome u dva reda */
 }
 
 th {
@@ -158,26 +159,21 @@ td {
   background: #1e293b;
 }
 
-/* NOVI RESPONSIVE DIZAJN ZA MOBILNE TELEFONE (SKROL TABELA UMESTO LOMA) */
+/* DIZAJN ZA MOBILNE TELEFONE - AKTIVIRA VODORAVNU SKROL TABELU */
 @media screen and (max-width: 768px) {
   .table-card {
-    padding: 5px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    padding: 8px;
+    overflow-x: auto; /* Prstima se gura lijevo-desno */
+    -webkit-overflow-scrolling: touch; /* Tečan skrol na iPhone-u */
   }
 
   table {
-    min-width: 650px; /* Primorava tabelu da zadrži čitljivu širinu na telefonu bez sabijanja tekstova */
+    min-width: 680px; /* Primorava tabelu da zadrži horizontalnu širinu umesto da se sabije */
   }
 
   th, td {
-    padding: 10px 6px;
-    font-size: 0.85rem;
-  }
-
-  th {
-    padding-right: 12px;
-    position: relative;
+    padding: 10px 8px;
+    font-size: 0.85rem; /* Prilagođena veličina teksta za mobilni */
   }
 }
 
