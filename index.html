@@ -8,31 +8,32 @@
 <body>
 
 <div class="container">
+
   <h1>🚖 Tesla Taxi – Raspored i Punjenje</h1>
 
-  <!-- FILTER -->
   <div class="card">
     <h2>🔎 Filter</h2>
 
     <input id="filterDriver" placeholder="Vozač">
     <input id="filterVehicle" placeholder="Vozilo (T-01)">
 
-    <label>Vrijeme OD (24h)</label>
+    <label>Vrijeme OD</label>
     <input id="filterTimeFrom" type="time">
 
-    <label>Vrijeme DO (24h)</label>
+    <label>Vrijeme DO</label>
     <input id="filterTimeTo" type="time">
 
     <button onclick="renderTable()">🔍 Primijeni filter</button>
     <button onclick="resetFilter()">♻️ Reset</button>
   </div>
 
-  <!-- INPUT -->
   <div class="card">
     <h2>➕ Dodaj unos</h2>
 
     <input id="driver" placeholder="Ime vozača">
+
     <input id="vehicle" placeholder="Vozilo (T-01)">
+
     <input id="date" type="date">
 
     <input id="shift" placeholder="Smjena (08:00 - 16:00)">
@@ -46,26 +47,28 @@
     <button onclick="addRow()">Dodaj</button>
   </div>
 
-  <!-- TABLE -->
   <div class="card">
     <table>
       <thead>
         <tr>
-          <th>Vozač</th>
-          <th>Vozilo</th>
-          <th>Datum</th>
-          <th>Smjena</th>
-          <th>Početak</th>
-          <th>Kraj</th>
+          <th onclick="sortTable('driver')">Vozač ↕</th>
+          <th onclick="sortTable('vehicle')">Vozilo ↕</th>
+          <th onclick="sortTable('date')">Datum ↕</th>
+          <th onclick="sortTable('shift')">Smjena ↕</th>
+          <th onclick="sortTable('chargeStart')">Početak ↕</th>
+          <th onclick="sortTable('chargeEnd')">Kraj ↕</th>
           <th>Obriši</th>
         </tr>
       </thead>
+
       <tbody id="tableBody"></tbody>
+
     </table>
   </div>
 
 </div>
 
 <script src="./app.js"></script>
+
 </body>
 </html>
