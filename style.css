@@ -27,9 +27,15 @@ h1 {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+/* Kontejner koji drži tabelu i omogućava čist horizontalni skrol */
 .table-card {
-  padding: 10px;
-  overflow-x: auto; /* Omogućava horizontalno skrolovanje */
+  padding: 15px;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Tečan skrol za iOS Safari */
 }
 
 h2 {
@@ -125,23 +131,26 @@ button:hover {
   padding: 6px 12px;
   font-size: 0.9rem;
   width: auto;
+  border-radius: 4px;
   display: inline-block;
 }
 .delete-btn:hover {
   background: #dc2626;
 }
 
+/* FIKSIRANI PC IZGLED TABELE ZA SVE URREĐAJE */
 table {
   width: 100%;
+  min-width: 800px; /* Force-uje tabelu da na telefonu zadrži punu širinu i raspored kao na PC-ju */
   border-collapse: collapse;
   margin-top: 10px;
 }
 
 th, td {
   border: 1px solid #334155;
-  padding: 12px 10px;
+  padding: 12px 14px;
   text-align: center;
-  white-space: nowrap; /* Sprečava da se tekstovi lome u dva reda */
+  white-space: nowrap; /* Strogo zabranjuje prelamanje teksta u novi red */
 }
 
 th {
@@ -149,6 +158,7 @@ th {
   color: black;
   cursor: pointer;
   user-select: none;
+  font-weight: bold;
 }
 
 th:hover {
@@ -157,24 +167,6 @@ th:hover {
 
 td {
   background: #1e293b;
-}
-
-/* DIZAJN ZA MOBILNE TELEFONE - AKTIVIRA VODORAVNU SKROL TABELU */
-@media screen and (max-width: 768px) {
-  .table-card {
-    padding: 8px;
-    overflow-x: auto; /* Prstima se gura lijevo-desno */
-    -webkit-overflow-scrolling: touch; /* Tečan skrol na iPhone-u */
-  }
-
-  table {
-    min-width: 680px; /* Primorava tabelu da zadrži horizontalnu širinu umesto da se sabije */
-  }
-
-  th, td {
-    padding: 10px 8px;
-    font-size: 0.85rem; /* Prilagođena veličina teksta za mobilni */
-  }
 }
 
 .flatpickr-calendar {
