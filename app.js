@@ -168,7 +168,7 @@ function renderTable() {
     return;
   }
 
-  // Generisanje čiste horizontalne strukture (bez starih data-label oznaka koje su lomile tabelu)
+  // Čisto generisanje PC strukture redova i kolona
   filtered.forEach(item => {
     body.innerHTML += `
       <tr>
