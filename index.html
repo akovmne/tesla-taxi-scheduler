@@ -2,7 +2,7 @@
 <html lang="sr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Tesla Taxi Raspored</title>
   <link rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -69,16 +69,17 @@
     <table class="responsive-table">
       <thead>
         <tr>
-          <th onclick="sortTable('driver')">Vozač ↕</th>
-          <th onclick="sortTable('vehicle')">Vozilo ↕</th>
-          <th onclick="sortTable('date')">Datum ↕</th>
-          <th onclick="sortTable('shift')">Smjena ↕</th>
-          <th onclick="sortTable('chargeStart')">Početak ↕</th>
-          <th onclick="sortTable('chargeEnd')">Kraj ↕</th>
-          <th>Obriši</th>
+          <th onclick="sortTable('driver')" style="cursor: pointer;">Vozač ↕</th>
+          <th onclick="sortTable('vehicle')" style="cursor: pointer;">Vozilo ↕</th>
+          <th onclick="sortTable('date')" style="cursor: pointer;">Datum ↕</th>
+          <th onclick="sortTable('shift')" style="cursor: pointer;">Smjena ↕</th>
+          <th onclick="sortTable('chargeStart')" style="cursor: pointer;">Početak ↕</th>
+          <th onclick="sortTable('chargeEnd')" style="cursor: pointer;">Kraj ↕</th>
+          <th>Briši</th>
         </tr>
       </thead>
-      <tbody id="tableBody"></tbody>
+      <tbody id="tableBody">
+        </tbody>
     </table>
   </div>
 
