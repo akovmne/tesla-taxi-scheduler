@@ -1,12 +1,30 @@
-const KEY = "raspored";
+// URL tačno podešen za američki server tvog Firebase projekta "tesla-punjaci"
+const FIREBASE_URL = "https://tesla-punjaci-default-rtdb.firebaseio.com/";
+
+// Inicijalizacija baze podataka preko Firebase SDK-a
+firebase.initializeApp({ databaseURL: FIREBASE_URL });
+const dbRef = firebase.database().ref("raspored");
 
 let currentSort = "";
 let sortDirection = "asc";
 let fpInstances = [];
+let globalData = []; 
 
 window.onload = function() {
   initTimePickers();
-  renderTable();
+  
+  // Osluškivanje i preuzimanje baze u realnom vremenu (automatsko osvežavanje)
+  dbRef.on("value", function(snapshot) {
+    const dataObj = snapshot.val() || {};
+    
+    // Pretvaranje Firebase objekta u niz radi lakšeg filtriranja i sortiranja
+    globalData = Object.keys(dataObj).map(key => ({
+      id: key,
+      ...dataObj[key]
+    }));
+    
+    renderTable();
+  });
 };
 
 function initTimePickers() {
@@ -21,20 +39,11 @@ function initTimePickers() {
     minuteIncrement: 5, 
     disableMobile: "true",
     onChange: function() {
-      // Automatski filtriraj tabelu kada se promeni vreme u filteru
       renderTable();
     }
   });
   
   fpInstances = Array.isArray(instances) ? instances : [instances];
-}
-
-function getData() {
-  return JSON.parse(localStorage.getItem(KEY) || "[]");
-}
-
-function saveData(data) {
-  localStorage.setItem(KEY, JSON.stringify(data));
 }
 
 function clean(v) {
@@ -90,7 +99,6 @@ function compareValues(a, b) {
 
 function renderTable() {
   const body = document.getElementById("tableBody");
-  const data = getData();
   const f = getFilters();
 
   body.innerHTML = "";
@@ -98,11 +106,9 @@ function renderTable() {
   const fromMin = toMinutes(f.from);
   const toMin = toMinutes(f.to);
 
-  let filtered = data.filter(item => {
+  let filtered = globalData.filter(item => {
     const matchDriver = String(item.driver || "").toLowerCase().includes(f.driver);
     const matchVehicle = String(item.vehicle || "").toLowerCase().includes(f.vehicle);
-    
-    // Osigurana tačna provera za smjenu (radi i za brojeve i za tekst)
     const matchShift = String(item.shift || "").toLowerCase().includes(f.shift);
 
     const times = [
@@ -186,10 +192,8 @@ function addRow() {
     return;
   }
 
-  const data = getData();
-
-  data.push({
-    id: Date.now().toString(),
+  // Slanje novog unosa direktno na Firebase server
+  dbRef.push({
     driver: driver.trim(),
     vehicle: vehicle.trim(),
     date,
@@ -197,9 +201,6 @@ function addRow() {
     chargeStart,
     chargeEnd
   });
-
-  saveData(data);
-  renderTable();
 
   document.getElementById("driver").value = "";
   document.getElementById("vehicle").value = "";
@@ -215,8 +216,6 @@ function addRow() {
 }
 
 function deleteRow(id) {
-  let data = getData();
-  data = data.filter(item => item.id !== id);
-  saveData(data);
-  renderTable();
+  // Brisanje unosa iz Firebase baze na osnovu jedinstvenog ID-ja
+  firebase.database().ref("raspored/" + id).remove();
 }
