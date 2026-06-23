@@ -18,10 +18,10 @@
     <input id="filterVehicle" placeholder="Vozilo (T-01)">
 
     <label>Vrijeme OD</label>
-    <input id="filterTimeFrom" type="time">
+    <input id="filterTimeFrom" type="time" step="300">
 
     <label>Vrijeme DO</label>
-    <input id="filterTimeTo" type="time">
+    <input id="filterTimeTo" type="time" step="300">
 
     <button onclick="renderTable()">🔍 Primijeni filter</button>
     <button onclick="resetFilter()">♻️ Reset</button>
@@ -39,10 +39,10 @@
     <input id="shift" placeholder="Smjena (08:00 - 16:00)">
 
     <label>Početak punjenja</label>
-    <input id="chargeStart" type="time">
+    <input id="chargeStart" type="time" step="300">
 
     <label>Kraj punjenja</label>
-    <input id="chargeEnd" type="time">
+    <input id="chargeEnd" type="time" step="300">
 
     <button onclick="addRow()">Dodaj</button>
   </div>
