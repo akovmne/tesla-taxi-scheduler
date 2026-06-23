@@ -7,11 +7,10 @@ const firebaseConfig = {
   messagingSenderId: "140620994358",
   appId: "1:140620994358:web:9bd2cbeaee436edea00597"
 };
-// URL tačno podešen za američki server tvog Firebase projekta "tesla-punjaci"
-const FIREBASE_URL = "https://tesla-punjaci-default-rtdb.firebaseio.com/";
-
-// Inicijalizacija baze podataka preko Firebase SDK-a
-firebase.initializeApp({ databaseURL: FIREBASE_URL });
+// Inicijalizacija baze podataka preko punog Config-a
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 const dbRef = firebase.database().ref("raspored");
 
 let currentSort = "";
@@ -22,17 +21,18 @@ let globalData = [];
 window.onload = function() {
   initTimePickers();
   
-  // Osluškivanje i preuzimanje baze u realnom vremenu (automatsko osvežavanje)
+  // Sinhronizacija u realnom vremenu na SVI uređajima istovremeno
   dbRef.on("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     
-    // Pretvaranje Firebase objekta u niz radi lakšeg filtriranja i sortiranja
     globalData = Object.keys(dataObj).map(key => ({
       id: key,
       ...dataObj[key]
     }));
     
     renderTable();
+  }, function(error) {
+    console.error("Greška pri čitanju iz Firebase baze: ", error);
   });
 };
 
@@ -201,7 +201,6 @@ function addRow() {
     return;
   }
 
-  // Slanje novog unosa direktno na Firebase server
   dbRef.push({
     driver: driver.trim(),
     vehicle: vehicle.trim(),
@@ -209,6 +208,8 @@ function addRow() {
     shift: shift.trim(),
     chargeStart,
     chargeEnd
+  }).catch(function(error) {
+    alert("Greška pri upisu u bazu: " + error.message);
   });
 
   document.getElementById("driver").value = "";
@@ -225,6 +226,7 @@ function addRow() {
 }
 
 function deleteRow(id) {
-  // Brisanje unosa iz Firebase baze na osnovu jedinstvenog ID-ja
-  firebase.database().ref("raspored/" + id).remove();
+  firebase.database().ref("raspored/" + id).remove().catch(function(error) {
+    alert("Greška pri brisanju: " + error.message);
+  });
 }
