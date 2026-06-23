@@ -48,7 +48,6 @@ label {
   margin-bottom: 2px;
 }
 
-/* Responzivni Grid sistem za formu i filtere */
 .grid-inputs {
   display: grid;
   grid-template-columns: 1fr;
@@ -79,7 +78,6 @@ input:focus {
   border-color: #38bdf8;
 }
 
-/* Dugmići */
 .btn-group {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -133,7 +131,6 @@ button:hover {
   background: #dc2626;
 }
 
-/* Tabela za desktop ekrane */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -161,51 +158,29 @@ td {
   background: #1e293b;
 }
 
-/* Pretvaranje tabele u mobilne kartice (ispod 768px širine) */
+/* NOVI RESPONSIVE DIZAJN ZA MOBILNE TELEFONE (SKROL TABELA UMESTO LOMA) */
 @media screen and (max-width: 768px) {
-  .responsive-table thead {
-    display: none;
+  .table-card {
+    padding: 5px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  
-  .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td {
-    display: block;
-    width: 100%;
+
+  table {
+    min-width: 650px; /* Primorava tabelu da zadrži čitljivu širinu na telefonu bez sabijanja tekstova */
   }
-  
-  .responsive-table tr {
-    margin-bottom: 15px;
-    border: 1px solid #38bdf8;
-    border-radius: 8px;
-    padding: 8px;
-    background: #0f172a;
+
+  th, td {
+    padding: 10px 6px;
+    font-size: 0.85rem;
   }
-  
-  .responsive-table td {
-    text-align: right;
-    padding-left: 50%;
+
+  th {
+    padding-right: 12px;
     position: relative;
-    border: none;
-    border-bottom: 1px solid #334155;
-    background: transparent;
-  }
-  
-  .responsive-table td:last-child {
-    border-bottom: none;
-  }
-  
-  /* Prikaz naziva kolona sa leve strane u mobilnom režimu */
-  .responsive-table td::before {
-    content: attr(data-label);
-    position: absolute;
-    left: 10px;
-    width: 45%;
-    text-align: left;
-    font-weight: bold;
-    color: #38bdf8;
   }
 }
 
-/* Prilagođavanje Flatpickr kalendara tamnom dizajnu aplikacije */
 .flatpickr-calendar {
   background: #1e293b !important;
   border: 1px solid #334155 !important;
