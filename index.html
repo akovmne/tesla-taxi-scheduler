@@ -4,6 +4,66 @@
   <meta charset="UTF-8">
   <title>Tesla Taxi Raspored</title>
   <link rel="stylesheet" href="./style.css">
+  <style>
+    /* Analog clock styles */
+    #timePickerModal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #timePickerContent {
+      background: #1e293b;
+      padding: 25px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      max-width: 340px;
+      width: 100%;
+    }
+
+    #clockCanvas {
+      border: 12px solid #334155;
+      border-radius: 50%;
+      background: #0f172a;
+      cursor: pointer;
+    }
+
+    .time-picker-header {
+      margin-bottom: 15px;
+      color: #38bdf8;
+      font-size: 1.2em;
+    }
+
+    .time-display {
+      font-size: 2.2em;
+      font-weight: bold;
+      margin: 15px 0;
+      color: white;
+      letter-spacing: 4px;
+    }
+
+    .time-picker-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .time-picker-buttons button {
+      flex: 1;
+    }
+
+    .hand {
+      transition: transform 0.1s ease-out;
+    }
+  </style>
 </head>
 <body>
 
@@ -18,10 +78,10 @@
     <input id="filterVehicle" placeholder="Vozilo (T-01)">
 
     <label>Vrijeme OD</label>
-    <input id="filterTimeFrom" type="time">
+    <input id="filterTimeFrom" type="text" readonly onclick="showTimePicker(this)">
 
     <label>Vrijeme DO</label>
-    <input id="filterTimeTo" type="time">
+    <input id="filterTimeTo" type="text" readonly onclick="showTimePicker(this)">
 
     <button onclick="renderTable()">🔍 Primijeni filter</button>
     <button onclick="resetFilter()">♻️ Reset</button>
@@ -39,10 +99,10 @@
     <input id="shift" placeholder="Smjena (08:00 - 16:00)">
 
     <label>Početak punjenja</label>
-    <input id="chargeStart" type="time">
+    <input id="chargeStart" type="text" readonly onclick="showTimePicker(this)">
 
     <label>Kraj punjenja</label>
-    <input id="chargeEnd" type="time">
+    <input id="chargeEnd" type="text" readonly onclick="showTimePicker(this)">
 
     <button onclick="addRow()">Dodaj</button>
   </div>
@@ -66,6 +126,20 @@
     </table>
   </div>
 
+</div>
+
+<!-- Analog 24h Time Picker Modal -->
+<div id="timePickerModal">
+  <div id="timePickerContent">
+    <div class="time-picker-header">Odaberi vrijeme (24h)</div>
+    <canvas id="clockCanvas" width="280" height="280"></canvas>
+    <div id="selectedTime" class="time-display">00:00</div>
+    
+    <div class="time-picker-buttons">
+      <button onclick="cancelTimePicker()">Otkaži</button>
+      <button onclick="confirmTimePicker()" style="background:#22c55e;">Potvrdi</button>
+    </div>
+  </div>
 </div>
 
 <script src="./app.js"></script>
