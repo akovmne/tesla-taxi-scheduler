@@ -168,6 +168,7 @@ function renderTable() {
     return;
   }
 
+  // Generisanje čiste horizontalne strukture (bez starih data-label oznaka koje su lomile tabelu)
   filtered.forEach(item => {
     body.innerHTML += `
       <tr>
