@@ -28,16 +28,17 @@ h1 {
 }
 
 .table-card {
-  padding: 10px;
+  padding: 20px;
   overflow-x: auto;
 }
 
 h2 {
   font-size: 1.3rem;
   margin-top: 0;
-  color: #f1f5f9;
+  color: #38bdf8;
   border-bottom: 1px solid #334155;
   padding-bottom: 8px;
+  margin-bottom: 15px;
 }
 
 label {
@@ -138,6 +139,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 th, td {
@@ -161,7 +163,7 @@ td {
   background: #1e293b;
 }
 
-/* Pretvaranje tabele u mobilne kartice (ispod 768px širine) */
+/* Pretvaranje obe tabele u mobilne kartice (ispod 768px širine) */
 @media screen and (max-width: 768px) {
   .responsive-table thead {
     display: none;
@@ -193,7 +195,6 @@ td {
     border-bottom: none;
   }
   
-  /* Prikaz naziva kolona sa leve strane u mobilnom režimu */
   .responsive-table td::before {
     content: attr(data-label);
     position: absolute;
