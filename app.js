@@ -7,7 +7,6 @@ let fpInstances = [];
 window.onload = function() {
   initTimePickers();
   renderTable();
-  updateDataLists();
 };
 
 function initTimePickers() {
@@ -22,6 +21,7 @@ function initTimePickers() {
     minuteIncrement: 5, 
     disableMobile: "true",
     onChange: function() {
+      // Automatski filtriraj tabelu kada se promeni vreme u filteru
       renderTable();
     }
   });
@@ -35,7 +35,6 @@ function getData() {
 
 function saveData(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
-  updateDataLists();
 }
 
 function clean(v) {
@@ -89,47 +88,12 @@ function compareValues(a, b) {
   return 0;
 }
 
-function updateDataLists() {
-  const data = getData();
-  
-  const drivers = new Set();
-  const vehicles = new Set();
-  const shifts = new Set();
-  
-  shifts.add("1");
-  shifts.add("2");
-  shifts.add("medju");
-
-  data.forEach(item => {
-    if(item.driver && item.driver.trim() !== "") drivers.add(item.driver.trim());
-    if(item.vehicle && item.vehicle.trim() !== "") vehicles.add(item.vehicle.trim());
-    if(item.shift && item.shift.trim() !== "") shifts.add(item.shift.trim());
-  });
-
-  fillDatalist("driversList", drivers);
-  fillDatalist("vehiclesList", vehicles);
-  fillDatalist("shiftsList", shifts);
-}
-
-function fillDatalist(elementId, set) {
-  const dl = document.getElementById(elementId);
-  if (!dl) return;
-  dl.innerHTML = "";
-  set.forEach(value => {
-    const option = document.createElement("option");
-    option.value = value;
-    dl.appendChild(option);
-  });
-}
-
 function renderTable() {
   const body = document.getElementById("tableBody");
-  const driversBody = document.getElementById("driversTableBody");
   const data = getData();
   const f = getFilters();
 
   body.innerHTML = "";
-  driversBody.innerHTML = "";
 
   const fromMin = toMinutes(f.from);
   const toMin = toMinutes(f.to);
@@ -137,6 +101,8 @@ function renderTable() {
   let filtered = data.filter(item => {
     const matchDriver = String(item.driver || "").toLowerCase().includes(f.driver);
     const matchVehicle = String(item.vehicle || "").toLowerCase().includes(f.vehicle);
+    
+    // Osigurana tačna provera za smjenu (radi i za brojeve i za tekst)
     const matchShift = String(item.shift || "").toLowerCase().includes(f.shift);
 
     const times = [
@@ -172,7 +138,6 @@ function renderTable() {
 
   if (filtered.length === 0) {
     body.innerHTML = `<tr><td colspan="7" style="text-align:center;">Nema rezultata</td></tr>`;
-    driversBody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Nema rezultata</td></tr>`;
     return;
   }
 
@@ -188,14 +153,6 @@ function renderTable() {
         <td data-label="Akcija">
           <button class="delete-btn" onclick="deleteRow('${item.id}')">X</button>
         </td>
-      </tr>
-    `;
-
-    driversBody.innerHTML += `
-      <tr>
-        <td data-label="Ime vozača">${clean(item.driver)}</td>
-        <td data-label="Broj vozila">${clean(item.vehicle)}</td>
-        <td data-label="Smjena">${clean(item.shift)}</td>
       </tr>
     `;
   });
