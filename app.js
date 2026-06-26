@@ -1,3 +1,4 @@
+// Konfiguracija tvog Firebase projekta
 const firebaseConfig = {
   apiKey: "AIzaSyA_wcdHfOVXJkS4Sm6ihjhaeGyrRjH9r1w",
   authDomain: "tesla-punjaci.firebaseapp.com",
@@ -8,6 +9,7 @@ const firebaseConfig = {
   appId: "1:140620994358:web:9bd2cbeaee436edea00597"
 };
 
+// Inicijalizacija baze podataka
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -17,11 +19,12 @@ let currentSort = "";
 let sortDirection = "asc";
 let fpInstances = [];
 let globalData = []; 
-let isInitialLoad = true; 
+let isInitialLoad = true; // Sprečava lažne notifikacije starih unosa pri osvežavanju stranice
 
 window.onload = function() {
   initTimePickers();
   
+  // Sinhronizacija u realnom vremenu na svim uređajima istovremeno
   dbRef.on("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     
@@ -31,21 +34,27 @@ window.onload = function() {
     }));
     
     renderTable();
-    isInitialLoad = false; 
+    isInitialLoad = false; // Nakon prvog povlačenja podataka, aktiviramo "live" režim za obaveštenja
   }, function(error) {
     console.error("Greška pri čitanju iz Firebase baze: ", error);
   });
 
+  // Prati kada BILO KO DRUGI doda novi red u bazu podataka
   dbRef.on("child_added", function(snapshot) {
     if (isInitialLoad) return; 
     const newEntry = snapshot.val();
     showNotification(newEntry, "add");
   });
 
-  // Prati kada BILO KO obriše unos iz baze sa bilo kog uređaja
+  // Prati kada BILO KO DRUGI obriše red iz baze podataka
   dbRef.on("child_removed", function(snapshot) {
+    if (isInitialLoad) return;
     const deletedEntry = snapshot.val();
-    showNotification(deletedEntry, "delete");
+    
+    // Provera da li je ova notifikacija već lokalno prikazana da se ne bi duplirala
+    if (deletedEntry && deletedEntry.driver) {
+      showNotification(deletedEntry, "delete");
+    }
   });
 };
 
@@ -296,22 +305,37 @@ function addRow() {
   });
 }
 
+// OSIGURANA DETEKCIJA BRISANJA: Podaci se odmah uzimaju i šalju u notifikaciju
 function deleteRow(id) {
-  if (confirm("Da li ste sigurni da želite da obrišete ovaj unos?")) {
+  // Pronalazimo tačan objekat u našoj lokalnoj memoriji pre nego što nestane iz baze
+  const matchEntry = globalData.find(item => item.id === id);
+
+  if (!matchEntry) {
+    alert("Greška: Unos nije pronađen u tabeli.");
+    return;
+  }
+
+  if (confirm(`Da li ste sigurni da želite da obrišete termin za vozača ${matchEntry.driver}?`)) {
+    // Odmah aktiviramo notifikaciju na našem ekranu
+    showNotification(matchEntry, "delete");
+
+    // Šaljemo komandu za brisanje u Firebase bazu
     firebase.database().ref("raspored/" + id).remove().catch(function(error) {
-      alert("Greška pri brisanju: " + error.message);
+      alert("Greška pri brisanju sa servera: " + error.message);
     });
   }
 }
 
+// Funkcija za generisanje popup obaveštenja (Sada sa ugrađenom crvenom bojom za brisanje)
 function showNotification(data, type = "add") {
   const container = document.getElementById("notification-container");
-  if (!container) return; // Ako kontejner ne postoji u HTML-u, funkcija staje ovde
+  if (!container) return; 
 
   const toast = document.createElement("div");
   toast.className = "notification-toast";
 
   if (type === "delete") {
+    // Direktno menjamo ivicu u crveno unutar JavaScripta za 100% sigurnost izgleda
     toast.style.borderLeft = "5px solid #ef4444"; 
     toast.innerHTML = `
       <strong style="color: #ef4444;">❌ Izbrisan termin!</strong><br>
@@ -321,8 +345,9 @@ function showNotification(data, type = "add") {
       🕒 <b>Vreme:</b> ${data.chargeStart || "—"} - ${data.chargeEnd || "—"}
     `;
   } else {
+    toast.style.borderLeft = "5px solid #10b981";
     toast.innerHTML = `
-      <strong>⚡ Dodat novi termin!</strong><br>
+      <strong style="color: #10b981;">⚡ Dodat novi termin!</strong><br>
       👤 <b>Vozač:</b> ${data.driver || "—"}<br>
       🚖 <b>Vozilo:</b> ${data.vehicle || "—"}<br>
       🕒 <b>Punjenje:</b> ${data.chargeStart || "—"} - ${data.chargeEnd || "—"}
@@ -331,6 +356,7 @@ function showNotification(data, type = "add") {
 
   container.appendChild(toast);
 
+  // Automatsko sklanjanje sa ekrana nakon 6 sekundi
   setTimeout(() => {
     toast.style.opacity = "0";
     toast.style.transform = "scale(0.9)";
