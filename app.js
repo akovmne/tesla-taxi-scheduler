@@ -22,15 +22,45 @@ let globalData = [];
 let isInitialLoad = true; 
 let notifiedDeletions = [];
 
-// Detekcija pritiska na taster Enter za aktivaciju filtera
+// Detekcija Enter tastera
 function checkEnter(event) {
   if (event.key === "Enter") {
     renderTable();
   }
 }
 
+// Glavna funkcija za paljenje satova sa zaštitom od kašnjenja biblioteke
+function initTimePickers() {
+  // Ako se flatpickr još nije učitao sa mreže, sačekaj 100ms pa probaj ponovo
+  if (typeof flatpickr === "undefined") {
+    setTimeout(initTimePickers, 100);
+    return;
+  }
+
+  // Uništavamo stare satove da se ne dupliraju u memoriji
+  fpInstances.forEach(instance => {
+    if (instance && typeof instance.destroy === "function") {
+      instance.destroy();
+    }
+  });
+  fpInstances = [];
+
+  // Pronađi sva polja i aktiviraj sat
+  const elements = document.querySelectorAll(".time-picker");
+  elements.forEach(el => {
+    const instance = flatpickr(el, {
+      enableTime: true,
+      noCalendar: true,
+      dateFormat: "H:i",
+      time_24hr: true,
+      minuteIncrement: 5,
+      disableMobile: true // Primorava mobilne da prikažu naš sat, a ne sistemsku tastaturu
+    });
+    fpInstances.push(instance);
+  });
+}
+
 window.onload = function() {
-  // Prva inicijalizacija satova pri učitavanju stranice
   initTimePickers();
   
   dbRef.on("value", function(snapshot) {
@@ -43,11 +73,8 @@ window.onload = function() {
     
     renderTable();
     
-    // Osiguravamo da satovi rade i nakon što Firebase osveži strukturu ekrana
-    if (fpInstances.length === 0) {
-      initTimePickers();
-    }
-    
+    // Svaki put kada Firebase osveži podatke, ponovo osiguravamo satove
+    initTimePickers();
     isInitialLoad = false; 
   }, function(error) {
     console.error("Greška pri čitanju iz Firebase baze: ", error);
@@ -72,30 +99,6 @@ window.onload = function() {
     }
   });
 };
-
-function initTimePickers() {
-  // Uništavamo stare instance ako postoje da ne guše memoriju
-  fpInstances.forEach(instance => {
-    if (instance && typeof instance.destroy === "function") {
-      instance.destroy();
-    }
-  });
-  fpInstances = [];
-
-  // Pokretanje Flatpickr-a na svim poljima koja imaju klasu .time-picker
-  const elements = document.querySelectorAll(".time-picker");
-  elements.forEach(el => {
-    const instance = flatpickr(el, {
-      enableTime: true,
-      noCalendar: true,
-      dateFormat: "H:i",
-      time_24hr: true,
-      minuteIncrement: 5, 
-      disableMobile: true // Primorava mobilne telefone da koriste naš tamni sat umesto sistemskog tastaturnog unosa
-    });
-    fpInstances.push(instance);
-  });
-}
 
 function clean(v) {
   return v && v.trim() !== "" ? v : "—";
