@@ -19,23 +19,26 @@
     <div class="card">
       <h2>🔎 Filter</h2>
       <div class="grid-inputs">
-        <input id="filterDriver" placeholder="Vozač" oninput="renderTable()">
-        <input id="filterVehicle" placeholder="Vozilo (T-01)" oninput="renderTable()">
-        <input id="filterShift" placeholder="Smjena (npr. 1)" oninput="renderTable()">
+        <input id="filterDriver" placeholder="Vozač" onkeydown="checkEnter(event)">
+        <input id="filterVehicle" placeholder="Vozilo (T-01)" onkeydown="checkEnter(event)">
+        <input id="filterShift" placeholder="Smjena (npr. 1)" onkeydown="checkEnter(event)">
       </div>
       
       <div class="grid-inputs">
         <div>
-          <label>Vrijeme OD</label>
-          <input id="filterTimeFrom" class="time-picker" placeholder="Izaberi vreme">
+          <label>Početak punjenja</label>
+          <input id="filterTimeFrom" class="time-picker" placeholder="Izaberi vreme" onkeydown="checkEnter(event)">
         </div>
         <div>
-          <label>Vrijeme DO</label>
-          <input id="filterTimeTo" class="time-picker" placeholder="Izaberi vreme">
+          <label>Kraj punjenja</label>
+          <input id="filterTimeTo" class="time-picker" placeholder="Izaberi vreme" onkeydown="checkEnter(event)">
         </div>
       </div>
 
-      <button onclick="resetFilter()" class="btn-secondary" style="margin-top: 15px;">Resetuj filtere</button>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button onclick="renderTable()" class="btn-filter" style="flex: 2;">Filtriraj</button>
+        <button onclick="resetFilter()" class="btn-secondary" style="flex: 1;">Resetuj</button>
+      </div>
     </div>
 
     <div class="card">
