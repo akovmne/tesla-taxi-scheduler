@@ -27,6 +27,7 @@ h1 {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+/* Kontejner koji drži tabelu i omogućava čist horizontalni skrol na telefonu */
 .table-card {
   padding: 15px;
 }
@@ -34,7 +35,7 @@ h1 {
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: touch; /* Tečan skrol za iOS Safari */
 }
 
 h2 {
@@ -49,56 +50,39 @@ label {
   display: block;
   font-size: 0.85rem;
   color: #94a3b8;
-  margin-top: 8px;
-  margin-bottom: 2px;
+  margin-bottom: 5px;
 }
 
 .grid-inputs {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-  margin-bottom: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
 }
 
-@media (min-width: 600px) {
-  .grid-inputs {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-}
-
-input {
+input, select {
   width: 100%;
-  padding: 12px;
-  margin: 4px 0;
-  border-radius: 6px;
-  border: 1px solid #334155;
+  padding: 10px;
   background: #0f172a;
+  border: 1px solid #334155;
   color: white;
+  border-radius: 6px;
   box-sizing: border-box;
   font-size: 1rem;
 }
 
-input:focus {
+input:focus, select:focus {
   outline: none;
   border-color: #38bdf8;
-}
-
-.btn-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 15px;
 }
 
 button {
   width: 100%;
   padding: 12px;
-  background: #38bdf8;
-  color: #0f172a;
   border: none;
-  border-radius: 6px;
-  font-weight: bold;
   font-size: 1rem;
+  font-weight: bold;
+  border-radius: 6px;
   cursor: pointer;
   transition: background 0.2s;
 }
@@ -137,9 +121,10 @@ button:hover {
   background: #dc2626;
 }
 
+/* FIKSIRANI PC IZGLED TABELE ZA SVE URREĐAJE (HORIZONTALNI SKROL NA MOBILNOM) */
 table {
   width: 100%;
-  min-width: 800px;
+  min-width: 800px; 
   border-collapse: collapse;
   margin-top: 10px;
 }
@@ -148,66 +133,66 @@ th, td {
   border: 1px solid #334155;
   padding: 12px 14px;
   text-align: center;
-  white-space: nowrap;
+  white-space: nowrap; 
 }
 
 th {
-  background: #0ea5e9;
-  color: black;
+  background: #0f172a;
+  color: #38bdf8;
   cursor: pointer;
   user-select: none;
-  font-weight: bold;
 }
 
 th:hover {
-  background: #0284c7;
-}
-
-td {
   background: #1e293b;
 }
 
-.flatpickr-calendar {
-  background: #1e293b !important;
-  border: 1px solid #334155 !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
-}
-.flatpickr-time input {
-  color: white !important;
-}
-.flatpickr-time .numInputWrapper span.arrowUp:after {
-  border-bottom-color: #38bdf8 !important;
-}
-.flatpickr-time .numInputWrapper span.arrowDown:after {
-  border-top-color: #38bdf8 !important;
+tr:nth-child(even) {
+  background: #1e293b;
 }
 
-/* NOVI STILOVI ZA LIVE OBAVEŠTENJA */
+tr:hover {
+  background: #334155;
+}
+
+/* ========================================================================= */
+/* NOTIFIKACIONI SISTEM U GORNJEM DESNOM UGLU EKRENA */
+/* ========================================================================= */
+
 #notification-container {
   position: fixed;
-  bottom: 20px;
+  top: 20px;
   right: 20px;
   z-index: 9999;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-width: 350px;
-  width: 100%;
+  max-width: 320px;
+  width: calc(100% - 40px);
 }
 
 .notification-toast {
   background: #1e293b;
-  border-left: 4px solid #38bdf8;
-  color: white;
-  padding: 15px;
-  border-radius: 6px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-  font-size: 0.9rem;
+  color: #f1f5f9;
+  padding: 14px 16px;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.5);
+  border-left: 5px solid #10b981; /* Po defaultu zelena za dodavanje unosa */
+  font-size: 0.95rem;
   line-height: 1.4;
   animation: slideIn 0.3s ease forwards;
+  opacity: 1;
+  transform: scale(1);
 }
 
+/* Animacija koja glatko uvlači notifikaciju sa desne strane ekrana */
 @keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
