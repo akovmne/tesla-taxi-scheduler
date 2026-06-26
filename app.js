@@ -9,7 +9,7 @@ const firebaseConfig = {
   appId: "1:140620994358:web:9bd2cbeaee436edea00597"
 };
 
-// Inicijalizacija baze podataka preko punog Config-a
+// Inicijalizacija baze podataka
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -28,6 +28,7 @@ window.onload = function() {
   dbRef.on("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     
+    // Čitamo sve podatke iz baze i punimo globalni niz podataka
     globalData = Object.keys(dataObj).map(key => ({
       id: key,
       ...dataObj[key]
@@ -81,7 +82,8 @@ function format24(time) {
 
 function toMinutes(t) {
   if (!t) return null;
-  const [h, m] = t.split(":").map(Number);
+  const cleanTime = String(t).trim();
+  const [h, m] = cleanTime.split(":").map(Number);
   if (isNaN(h) || isNaN(m)) return null;
   return h * 60 + m;
 }
@@ -150,15 +152,12 @@ function renderTable() {
 
     let matchTime = true;
 
-    // Ako je upisan samo početak filtera (Početak punjenja), prikazuje sve termine od tog vremena pa nadalje
     if (fromMin !== null && toMin === null) {
       matchTime = (startMin !== null && startMin >= fromMin);
     }
-    // Ako je upisan samo kraj filtera (Kraj punjenja)
     else if (fromMin === null && toMin !== null) {
       matchTime = (endMin !== null && endMin <= toMin);
     }
-    // Ako su upisana oba vremena, traži striktan presek unutar tog opsega
     else if (fromMin !== null && toMin !== null) {
       matchTime = (startMin !== null && startMin >= fromMin) && (endMin !== null && endMin <= toMin);
     }
@@ -238,61 +237,60 @@ function addRow() {
     return;
   }
 
-  // --- LOGIKA: DOZVOLJENA MAKSIMALNO 2 UNOSA ZA ISTI TERMIN ---
+  // --- MOMENTALNA LOKALNA PROVERA PREKLAPANJA (BEZ ČEKANJA NA FIREBASE) ---
   let overlapCount = 0;
-  let occupiedDetails = []; // Pamti informacije o vozilima koja već pune
-  
-  const targetDate = date.trim(); 
+  let occupiedDetails = []; 
+  const targetDate = String(date).trim(); 
 
   for (let i = 0; i < globalData.length; i++) {
     const existing = globalData[i];
     
-    // Provera za isti dan
+    // Provera da li je u pitanju isti dan
     if (String(existing.date).trim() === targetDate) {
       const extStart = toMinutes(existing.chargeStart);
       const extEnd = toMinutes(existing.chargeEnd);
       
       if (extStart !== null && extEnd !== null) {
-        // Uslov preklapanja vremenskih intervala
+        // Stroga matematička provera preklapanja intervala vremena
         if (newStart < extEnd && newEnd > extStart) {
           overlapCount++;
-          occupiedDetails.push(`• Vozač: ${existing.driver} (${existing.vehicle}) u periodu ${existing.chargeStart} - ${existing.chargeEnd}`);
+          occupiedDetails.push(`• Vozač: ${existing.driver} (${existing.vehicle}) [${existing.chargeStart} - ${existing.chargeEnd}]`);
         }
       }
     }
   }
 
-  // Ako već postoje 2 termina koja se preklapaju sa ovim novim, blokiraj treći unos
+  // STOP: Ako već imamo 2 unosa koji se preklapaju, treći se momentalno blokira ovde!
   if (overlapCount >= 2) {
-    alert(`⚠️ SVA MESTA NA PUNJAČIMA SU ZAUZETA!\n\nVeć postoje 2 unosa u ovom terminu:\n${occupiedDetails.join("\n")}\n\nNemoguće je dodati treći unos.`);
-    return;
+    alert(`⚠️ SVA MESTA NA PUNJAČIMA SU ZAUZETA!\n\nVeć postoje 2 unosa u ovom vremenskom opsegu:\n${occupiedDetails.join("\n")}\n\nNemoguće je dodati treći unos.`);
+    return; 
   }
-  // -----------------------------------------------------------------
+  // -----------------------------------------------------------------------
 
-  // Ako ima manje od 2 preklapanja, unos bezbedno prolazi u bazu
+  // Ako je provera uspešna, šaljemo podatke u bazu
   dbRef.push({
     driver: driver.trim(),
     vehicle: vehicle,
     date: targetDate,
     shift: shift.trim(),
-    chargeStart: chargeStart,
-    chargeEnd: chargeEnd
+    chargeStart: String(chargeStart).trim(),
+    chargeEnd: String(chargeEnd).trim()
+  }).then(() => {
+    // Čistimo input polja na interfejsu tek nakon uspešnog unosa
+    document.getElementById("driver").value = "";
+    document.getElementById("vehicle").value = "";
+    document.getElementById("date").value = "";
+    document.getElementById("shift").value = "";
+    
+    if (document.getElementById("chargeStart") && document.getElementById("chargeStart")._flatpickr) {
+      document.getElementById("chargeStart")._flatpickr.clear();
+    }
+    if (document.getElementById("chargeEnd") && document.getElementById("chargeEnd")._flatpickr) {
+      document.getElementById("chargeEnd")._flatpickr.clear();
+    }
   }).catch(function(error) {
     alert("Greška pri upisu u bazu: " + error.message);
   });
-
-  // Resetovanje polja nakon uspešnog unosa
-  document.getElementById("driver").value = "";
-  document.getElementById("vehicle").value = "";
-  document.getElementById("date").value = "";
-  document.getElementById("shift").value = "";
-  
-  if (document.getElementById("chargeStart") && document.getElementById("chargeStart")._flatpickr) {
-    document.getElementById("chargeStart")._flatpickr.clear();
-  }
-  if (document.getElementById("chargeEnd") && document.getElementById("chargeEnd")._flatpickr) {
-    document.getElementById("chargeEnd")._flatpickr.clear();
-  }
 }
 
 function deleteRow(id) {
@@ -319,7 +317,6 @@ function showNotification(data) {
 
   container.appendChild(toast);
 
-  // Automatski briše obaveštenje sa ekrana nakon 6 sekundi uz blagu animaciju
   setTimeout(() => {
     toast.style.opacity = "0";
     toast.style.transform = "scale(0.9)";
