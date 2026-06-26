@@ -30,6 +30,7 @@ function checkEnter(event) {
 }
 
 window.onload = function() {
+  // Prva inicijalizacija satova pri učitavanju stranice
   initTimePickers();
   
   dbRef.on("value", function(snapshot) {
@@ -41,6 +42,12 @@ window.onload = function() {
     }));
     
     renderTable();
+    
+    // Osiguravamo da satovi rade i nakon što Firebase osveži strukturu ekrana
+    if (fpInstances.length === 0) {
+      initTimePickers();
+    }
+    
     isInitialLoad = false; 
   }, function(error) {
     console.error("Greška pri čitanju iz Firebase baze: ", error);
@@ -67,19 +74,27 @@ window.onload = function() {
 };
 
 function initTimePickers() {
-  fpInstances.forEach(instance => instance.destroy());
+  // Uništavamo stare instance ako postoje da ne guše memoriju
+  fpInstances.forEach(instance => {
+    if (instance && typeof instance.destroy === "function") {
+      instance.destroy();
+    }
+  });
   fpInstances = [];
 
-  const instances = flatpickr(".time-picker", {
-    enableTime: true,
-    noCalendar: true,
-    dateFormat: "H:i",
-    time_24hr: true,
-    minuteIncrement: 5, 
-    disableMobile: "true"
+  // Pokretanje Flatpickr-a na svim poljima koja imaju klasu .time-picker
+  const elements = document.querySelectorAll(".time-picker");
+  elements.forEach(el => {
+    const instance = flatpickr(el, {
+      enableTime: true,
+      noCalendar: true,
+      dateFormat: "H:i",
+      time_24hr: true,
+      minuteIncrement: 5, 
+      disableMobile: true // Primorava mobilne telefone da koriste naš tamni sat umesto sistemskog tastaturnog unosa
+    });
+    fpInstances.push(instance);
   });
-  
-  fpInstances = Array.isArray(instances) ? instances : [instances];
 }
 
 function clean(v) {
@@ -216,12 +231,13 @@ function resetFilter() {
   if (document.getElementById("filterVehicle")) document.getElementById("filterVehicle").value = "";
   if (document.getElementById("filterShift")) document.getElementById("filterShift").value = "";
   
-  if (document.getElementById("filterTimeFrom") && document.getElementById("filterTimeFrom")._flatpickr) {
-    document.getElementById("filterTimeFrom")._flatpickr.clear();
-  }
-  if (document.getElementById("filterTimeTo") && document.getElementById("filterTimeTo")._flatpickr) {
-    document.getElementById("filterTimeTo")._flatpickr.clear();
-  }
+  // Čišćenje flatpickr unosa kroz njihove instance
+  const elements = document.querySelectorAll(".time-picker");
+  elements.forEach(el => {
+    if (el._flatpickr) {
+      el._flatpickr.clear();
+    }
+  });
 
   renderTable();
 }
