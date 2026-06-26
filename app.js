@@ -1,3 +1,4 @@
+// Konfiguracija tvog Firebase projekta
 const firebaseConfig = {
   apiKey: "AIzaSyA_wcdHfOVXJkS4Sm6ihjhaeGyrRjH9r1w",
   authDomain: "tesla-punjaci.firebaseapp.com",
@@ -8,6 +9,7 @@ const firebaseConfig = {
   appId: "1:140620994358:web:9bd2cbeaee436edea00597"
 };
 
+// Inicijalizacija baze podataka preko punog Config-a
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -17,12 +19,12 @@ let currentSort = "";
 let sortDirection = "asc";
 let fpInstances = [];
 let globalData = []; 
-let isInitialLoad = true; // Sprečava lažne notifikacije starih unosa pri osvežavanju
+let isInitialLoad = true; // Sprečava lažne notifikacije starih unosa pri osvežavanju stranice
 
 window.onload = function() {
   initTimePickers();
   
-  // Sinhronizacija tabele u realnom vremenu
+  // Sinhronizacija u realnom vremenu na svim uređajima istovremeno
   dbRef.on("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     
@@ -39,7 +41,7 @@ window.onload = function() {
 
   // Slušač koji reaguje čim bilo ko unese novi red u bazu podataka
   dbRef.on("child_added", function(snapshot) {
-    if (isInitialLoad) return; // Ignoriši stare zapise pri učitavanju
+    if (isInitialLoad) return; // Ignoriši stare zapise pri prvom učitavanju stranice
     const newEntry = snapshot.val();
     showNotification(newEntry);
   });
@@ -148,15 +150,15 @@ function renderTable() {
 
     let matchTime = true;
 
-    // Ako je upisan samo početak filtera, traži sve termine od tog vremena pa nadalje
+    // Ako je upisan samo početak filtera (Početak punjenja), prikazuje sve termine od tog vremena pa nadalje
     if (fromMin !== null && toMin === null) {
       matchTime = (startMin !== null && startMin >= fromMin);
     }
-    // Ako je upisan samo kraj filtera
+    // Ako je upisan samo kraj filtera (Kraj punjenja)
     else if (fromMin === null && toMin !== null) {
       matchTime = (endMin !== null && endMin <= toMin);
     }
-    // Ako su upisana oba vremena, traži presek
+    // Ako su upisana oba vremena, traži striktan presek unutar tog opsega
     else if (fromMin !== null && toMin !== null) {
       matchTime = (startMin !== null && startMin >= fromMin) && (endMin !== null && endMin <= toMin);
     }
@@ -213,7 +215,115 @@ function resetFilter() {
 function addRow() {
   const driver = document.getElementById("driver").value;
   const vehicle = document.getElementById("vehicle").value.trim().toUpperCase();
-  const date = document.getElementById("date").value;
+  const date = document.getElementById("date").value; 
   const shift = document.getElementById("shift").value;
-  const chargeStart = document.getElementById("chargeStart").value;
-  const charge
+  const chargeStart = document.getElementById("chargeStart").value; 
+  const chargeEnd = document.getElementById("chargeEnd").value;     
+
+  if (!driver.trim() || !vehicle.trim() || !date.trim() || !chargeStart || !chargeEnd) {
+    alert("Unesite vozača, vozilo, datum, početak i kraj punjenja!");
+    return;
+  }
+
+  const newStart = toMinutes(chargeStart);
+  const newEnd = toMinutes(chargeEnd);
+
+  if (newStart === null || newEnd === null) {
+    alert("Greška u formatu vremena!");
+    return;
+  }
+
+  if (newStart >= newEnd) {
+    alert("Kraj punjenja mora biti nakon početka punjenja!");
+    return;
+  }
+
+  // --- LOGIKA: DOZVOLJENA MAKSIMALNO 2 UNOSA ZA ISTI TERMIN ---
+  let overlapCount = 0;
+  let occupiedDetails = []; // Pamti informacije o vozilima koja već pune
+  
+  const targetDate = date.trim(); 
+
+  for (let i = 0; i < globalData.length; i++) {
+    const existing = globalData[i];
+    
+    // Provera za isti dan
+    if (String(existing.date).trim() === targetDate) {
+      const extStart = toMinutes(existing.chargeStart);
+      const extEnd = toMinutes(existing.chargeEnd);
+      
+      if (extStart !== null && extEnd !== null) {
+        // Uslov preklapanja vremenskih intervala
+        if (newStart < extEnd && newEnd > extStart) {
+          overlapCount++;
+          occupiedDetails.push(`• Vozač: ${existing.driver} (${existing.vehicle}) u periodu ${existing.chargeStart} - ${existing.chargeEnd}`);
+        }
+      }
+    }
+  }
+
+  // Ako već postoje 2 termina koja se preklapaju sa ovim novim, blokiraj treći unos
+  if (overlapCount >= 2) {
+    alert(`⚠️ SVA MESTA NA PUNJAČIMA SU ZAUZETA!\n\nVeć postoje 2 unosa u ovom terminu:\n${occupiedDetails.join("\n")}\n\nNemoguće je dodati treći unos.`);
+    return;
+  }
+  // -----------------------------------------------------------------
+
+  // Ako ima manje od 2 preklapanja, unos bezbedno prolazi u bazu
+  dbRef.push({
+    driver: driver.trim(),
+    vehicle: vehicle,
+    date: targetDate,
+    shift: shift.trim(),
+    chargeStart: chargeStart,
+    chargeEnd: chargeEnd
+  }).catch(function(error) {
+    alert("Greška pri upisu u bazu: " + error.message);
+  });
+
+  // Resetovanje polja nakon uspešnog unosa
+  document.getElementById("driver").value = "";
+  document.getElementById("vehicle").value = "";
+  document.getElementById("date").value = "";
+  document.getElementById("shift").value = "";
+  
+  if (document.getElementById("chargeStart") && document.getElementById("chargeStart")._flatpickr) {
+    document.getElementById("chargeStart")._flatpickr.clear();
+  }
+  if (document.getElementById("chargeEnd") && document.getElementById("chargeEnd")._flatpickr) {
+    document.getElementById("chargeEnd")._flatpickr.clear();
+  }
+}
+
+function deleteRow(id) {
+  if (confirm("Da li ste sigurni da želite da obrišete ovaj unos?")) {
+    firebase.database().ref("raspored/" + id).remove().catch(function(error) {
+      alert("Greška pri brisanju: " + error.message);
+    });
+  }
+}
+
+// Funkcija za generisanje popup obaveštenja u uglu ekrana za nove unose
+function showNotification(data) {
+  const container = document.getElementById("notification-container");
+  if (!container) return;
+
+  const toast = document.createElement("div");
+  toast.className = "notification-toast";
+  toast.innerHTML = `
+    <strong>⚡ Dodat novi termin!</strong><br>
+    👤 <b>Vozač:</b> ${data.driver}<br>
+    🚖 <b>Vozilo:</b> ${data.vehicle}<br>
+    🕒 <b>Punjenje:</b> ${data.chargeStart} - ${data.chargeEnd}
+  `;
+
+  container.appendChild(toast);
+
+  // Automatski briše obaveštenje sa ekrana nakon 6 sekundi uz blagu animaciju
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "scale(0.9)";
+    toast.style.transition = "all 0.4s ease";
+    setTimeout(() => toast.remove(), 400);
+  }, 6000);
+}
