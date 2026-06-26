@@ -87,8 +87,15 @@ button {
   transition: background 0.2s;
 }
 
-button:hover {
+/* NOVO: Stil za plavo dugme "Filtriraj" */
+.btn-filter {
+  background: #38bdf8;
+  color: #0f172a;
+  font-weight: bold;
+}
+.btn-filter:hover {
   background: #0ea5e9;
+  color: white;
 }
 
 .btn-secondary {
@@ -118,81 +125,4 @@ button:hover {
   display: inline-block;
 }
 .delete-btn:hover {
-  background: #dc2626;
-}
-
-/* FIKSIRANI PC IZGLED TABELE ZA SVE URREĐAJE (HORIZONTALNI SKROL NA MOBILNOM) */
-table {
-  width: 100%;
-  min-width: 800px; 
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-th, td {
-  border: 1px solid #334155;
-  padding: 12px 14px;
-  text-align: center;
-  white-space: nowrap; 
-}
-
-th {
-  background: #0f172a;
-  color: #38bdf8;
-  cursor: pointer;
-  user-select: none;
-}
-
-th:hover {
-  background: #1e293b;
-}
-
-tr:nth-child(even) {
-  background: #1e293b;
-}
-
-tr:hover {
-  background: #334155;
-}
-
-/* ========================================================================= */
-/* NOTIFIKACIONI SISTEM U GORNJEM DESNOM UGLU EKRENA */
-/* ========================================================================= */
-
-#notification-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-width: 320px;
-  width: calc(100% - 40px);
-}
-
-.notification-toast {
-  background: #1e293b;
-  color: #f1f5f9;
-  padding: 14px 16px;
-  border-radius: 8px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.5);
-  border-left: 5px solid #10b981; /* Po defaultu zelena za dodavanje unosa */
-  font-size: 0.95rem;
-  line-height: 1.4;
-  animation: slideIn 0.3s ease forwards;
-  opacity: 1;
-  transform: scale(1);
-}
-
-/* Animacija koja glatko uvlači notifikaciju sa desne strane ekrana */
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
+  background: #
