@@ -28,7 +28,6 @@ window.onload = function() {
   dbRef.on("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     
-    // Čitamo sve podatke iz baze i punimo globalni niz podataka
     globalData = Object.keys(dataObj).map(key => ({
       id: key,
       ...dataObj[key]
@@ -44,7 +43,14 @@ window.onload = function() {
   dbRef.on("child_added", function(snapshot) {
     if (isInitialLoad) return; // Ignoriši stare zapise pri prvom učitavanju stranice
     const newEntry = snapshot.val();
-    showNotification(newEntry);
+    showNotification(newEntry, "add");
+  });
+
+  // Slušač koji reaguje čim bilo ko obriše red iz baze podataka
+  dbRef.on("child_removed", function(snapshot) {
+    if (isInitialLoad) return; 
+    const deletedEntry = snapshot.val();
+    showNotification(deletedEntry, "delete");
   });
 };
 
@@ -237,37 +243,41 @@ function addRow() {
     return;
   }
 
-  // --- MOMENTALNA LOKALNA PROVERA PREKLAPANJA (BEZ ČEKANJA NA FIREBASE) ---
-  let overlapCount = 0;
-  let occupiedDetails = []; 
-  const targetDate = String(date).trim(); 
+  // --- NEPROBOJNA PROVERA: MINUT PO MINUT ---
+  const targetDate = String(date).trim();
+  let maxSimultaneous = 0; 
+  let conflicts = new Set();
 
-  for (let i = 0; i < globalData.length; i++) {
-    const existing = globalData[i];
-    
-    // Provera da li je u pitanju isti dan
-    if (String(existing.date).trim() === targetDate) {
-      const extStart = toMinutes(existing.chargeStart);
-      const extEnd = toMinutes(existing.chargeEnd);
-      
-      if (extStart !== null && extEnd !== null) {
-        // Stroga matematička provera preklapanja intervala vremena
-        if (newStart < extEnd && newEnd > extStart) {
-          overlapCount++;
-          occupiedDetails.push(`• Vozač: ${existing.driver} (${existing.vehicle}) [${existing.chargeStart} - ${existing.chargeEnd}]`);
+  for (let minute = newStart; minute < newEnd; minute++) {
+    let activeVehiclesAtThisMinute = 0;
+
+    for (let i = 0; i < globalData.length; i++) {
+      const existing = globalData[i];
+
+      if (String(existing.date).trim() === targetDate) {
+        const extStart = toMinutes(existing.chargeStart);
+        const extEnd = toMinutes(existing.chargeEnd);
+
+        if (extStart !== null && extEnd !== null) {
+          if (minute >= extStart && minute < extEnd) {
+            activeVehiclesAtThisMinute++;
+            conflicts.add(`• Vozač: ${existing.driver} (${existing.vehicle}) [${existing.chargeStart} - ${existing.chargeEnd}]`);
+          }
         }
       }
     }
+
+    if (activeVehiclesAtThisMinute > maxSimultaneous) {
+      maxSimultaneous = activeVehiclesAtThisMinute;
+    }
   }
 
-  // STOP: Ako već imamo 2 unosa koji se preklapaju, treći se momentalno blokira ovde!
-  if (overlapCount >= 2) {
-    alert(`⚠️ SVA MESTA NA PUNJAČIMA SU ZAUZETA!\n\nVeć postoje 2 unosa u ovom vremenskom opsegu:\n${occupiedDetails.join("\n")}\n\nNemoguće je dodati treći unos.`);
-    return; 
+  if (maxSimultaneous >= 2) {
+    const conflictList = Array.from(conflicts).join("\n");
+    alert(`⚠️ SVA MESTA NA PUNJAČIMA SU ZAUZETA!\n\nU traženom periodu već postoje unosi koji popunjavaju oba mesta:\n${conflictList}\n\nNemoguće je dodati treći unos.`);
+    return;
   }
-  // -----------------------------------------------------------------------
 
-  // Ako je provera uspešna, šaljemo podatke u bazu
   dbRef.push({
     driver: driver.trim(),
     vehicle: vehicle,
@@ -276,7 +286,6 @@ function addRow() {
     chargeStart: String(chargeStart).trim(),
     chargeEnd: String(chargeEnd).trim()
   }).then(() => {
-    // Čistimo input polja na interfejsu tek nakon uspešnog unosa
     document.getElementById("driver").value = "";
     document.getElementById("vehicle").value = "";
     document.getElementById("date").value = "";
@@ -301,19 +310,33 @@ function deleteRow(id) {
   }
 }
 
-// Funkcija za generisanje popup obaveštenja u uglu ekrana za nove unose
-function showNotification(data) {
+// Funkcija za generisanje popup obaveštenja (Dodavanje i Brisanje)
+function showNotification(data, type = "add") {
   const container = document.getElementById("notification-container");
   if (!container) return;
 
   const toast = document.createElement("div");
   toast.className = "notification-toast";
-  toast.innerHTML = `
-    <strong>⚡ Dodat novi termin!</strong><br>
-    👤 <b>Vozač:</b> ${data.driver}<br>
-    🚖 <b>Vozilo:</b> ${data.vehicle}<br>
-    🕒 <b>Punjenje:</b> ${data.chargeStart} - ${data.chargeEnd}
-  `;
+
+  if (type === "delete") {
+    // Stil i tekst za izbrisane unose (Crveni tonovi za brisanje)
+    toast.style.borderLeft = "5px solid #ef4444";
+    toast.innerHTML = `
+      <strong style="color: #ef4444;">❌ Izbrisan termin!</strong><br>
+      👤 <b>Vozač:</b> ${data.driver}<br>
+      🚖 <b>Vozilo:</b> ${data.vehicle}<br>
+      📅 <b>Datum:</b> ${data.date}<br>
+      🕒 <b>Vreme:</b> ${data.chargeStart} - ${data.chargeEnd}
+    `;
+  } else {
+    // Standardni izgled za dodavanje novog unosa (Zeleni tonovi)
+    toast.innerHTML = `
+      <strong>⚡ Dodat novi termin!</strong><br>
+      👤 <b>Vozač:</b> ${data.driver}<br>
+      🚖 <b>Vozilo:</b> ${data.vehicle}<br>
+      🕒 <b>Punjenje:</b> ${data.chargeStart} - ${data.chargeEnd}
+    `;
+  }
 
   container.appendChild(toast);
 
