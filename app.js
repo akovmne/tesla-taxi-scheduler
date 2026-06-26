@@ -20,6 +20,7 @@ let sortDirection = "asc";
 let fpInstances = [];
 let globalData = []; 
 let isInitialLoad = true; // Sprečava lažne notifikacije starih unosa pri osvežavanju stranice
+let myDeletedId = null;   // Pamti ID koji je ovaj korisnik ručno obrisao da spreči duplu notifikaciju
 
 window.onload = function() {
   initTimePickers();
@@ -39,21 +40,28 @@ window.onload = function() {
     console.error("Greška pri čitanju iz Firebase baze: ", error);
   });
 
-  // Prati kada BILO KO DRUGI doda novi red u bazu podataka
+  // Prati kada bilo ko doda novi red u bazu podataka
   dbRef.on("child_added", function(snapshot) {
     if (isInitialLoad) return; 
     const newEntry = snapshot.val();
     showNotification(newEntry, "add");
   });
 
-  // Prati kada BILO KO DRUGI obriše red iz baze podataka
+  // Prati kada je red uklonjen (bilo sa ovog, bilo sa tuđeg uređaja)
   dbRef.on("child_removed", function(snapshot) {
     if (isInitialLoad) return;
+    const deletedId = snapshot.key;
     const deletedEntry = snapshot.val();
     
-    // Provera da li je ova notifikacija već lokalno prikazana da se ne bi duplirala
-    if (deletedEntry && deletedEntry.driver) {
-      showNotification(deletedEntry, "delete");
+    // AKO JE OVO OBRIŠU NA DRUGOM TELEFONU: Prikazuje se notifikacija
+    // Ako smo obrisali mi sami, preskačemo jer je deleteRow() već izbacio poruku
+    if (deletedId !== myDeletedId) {
+      if (deletedEntry && deletedEntry.driver) {
+        showNotification(deletedEntry, "delete");
+      }
+    } else {
+      // Resetujemo marker čim prođe provera, spremno za sledeće brisanje
+      myDeletedId = null;
     }
   });
 };
@@ -305,9 +313,7 @@ function addRow() {
   });
 }
 
-// OSIGURANA DETEKCIJA BRISANJA: Podaci se odmah uzimaju i šalju u notifikaciju
 function deleteRow(id) {
-  // Pronalazimo tačan objekat u našoj lokalnoj memoriji pre nego što nestane iz baze
   const matchEntry = globalData.find(item => item.id === id);
 
   if (!matchEntry) {
@@ -316,17 +322,20 @@ function deleteRow(id) {
   }
 
   if (confirm(`Da li ste sigurni da želite da obrišete termin za vozača ${matchEntry.driver}?`)) {
-    // Odmah aktiviramo notifikaciju na našem ekranu
+    // Pamti se ID koji smo obrisali kako bi sprečili dupliranje poruke preko child_removed slušača
+    myDeletedId = id;
+
+    // Odmah aktiviramo lokalnu notifikaciju na ekranu
     showNotification(matchEntry, "delete");
 
-    // Šaljemo komandu za brisanje u Firebase bazu
+    // Šaljemo naredbu za brisanje u Firebase bazu
     firebase.database().ref("raspored/" + id).remove().catch(function(error) {
       alert("Greška pri brisanju sa servera: " + error.message);
+      myDeletedId = null; // Resetujemo u slučaju neuspeha na mreži
     });
   }
 }
 
-// Funkcija za generisanje popup obaveštenja (Sada sa ugrađenom crvenom bojom za brisanje)
 function showNotification(data, type = "add") {
   const container = document.getElementById("notification-container");
   if (!container) return; 
@@ -335,32 +344,9 @@ function showNotification(data, type = "add") {
   toast.className = "notification-toast";
 
   if (type === "delete") {
-    // Direktno menjamo ivicu u crveno unutar JavaScripta za 100% sigurnost izgleda
     toast.style.borderLeft = "5px solid #ef4444"; 
     toast.innerHTML = `
       <strong style="color: #ef4444;">❌ Izbrisan termin!</strong><br>
       👤 <b>Vozač:</b> ${data.driver || "—"}<br>
       🚖 <b>Vozilo:</b> ${data.vehicle || "—"}<br>
-      📅 <b>Datum:</b> ${data.date || "—"}<br>
-      🕒 <b>Vreme:</b> ${data.chargeStart || "—"} - ${data.chargeEnd || "—"}
-    `;
-  } else {
-    toast.style.borderLeft = "5px solid #10b981";
-    toast.innerHTML = `
-      <strong style="color: #10b981;">⚡ Dodat novi termin!</strong><br>
-      👤 <b>Vozač:</b> ${data.driver || "—"}<br>
-      🚖 <b>Vozilo:</b> ${data.vehicle || "—"}<br>
-      🕒 <b>Punjenje:</b> ${data.chargeStart || "—"} - ${data.chargeEnd || "—"}
-    `;
-  }
-
-  container.appendChild(toast);
-
-  // Automatsko sklanjanje sa ekrana nakon 6 sekundi
-  setTimeout(() => {
-    toast.style.opacity = "0";
-    toast.style.transform = "scale(0.9)";
-    toast.style.transition = "all 0.4s ease";
-    setTimeout(() => toast.remove(), 400);
-  }, 6000);
-}
+      📅 <b>Datum:</b> ${data.date || "—"}
