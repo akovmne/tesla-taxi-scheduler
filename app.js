@@ -1,4 +1,3 @@
-// Konfiguracija tvog Firebase projekta
 const firebaseConfig = {
   apiKey: "AIzaSyA_wcdHfOVXJkS4Sm6ihjhaeGyrRjH9r1w",
   authDomain: "tesla-punjaci.firebaseapp.com",
@@ -9,7 +8,6 @@ const firebaseConfig = {
   appId: "1:140620994358:web:9bd2cbeaee436edea00597"
 };
 
-// Inicijalizacija baze podataka
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -19,12 +17,11 @@ let currentSort = "";
 let sortDirection = "asc";
 let fpInstances = [];
 let globalData = []; 
-let isInitialLoad = true; // Sprečava lažne notifikacije starih unosa pri osvežavanju stranice
+let isInitialLoad = true; 
 
 window.onload = function() {
   initTimePickers();
   
-  // Sinhronizacija u realnom vremenu na svim uređajima istovremeno
   dbRef.on("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     
@@ -34,21 +31,19 @@ window.onload = function() {
     }));
     
     renderTable();
-    isInitialLoad = false; // Nakon prvog povlačenja podataka, aktiviramo "live" režim za obaveštenja
+    isInitialLoad = false; 
   }, function(error) {
     console.error("Greška pri čitanju iz Firebase baze: ", error);
   });
 
-  // Slušač koji reaguje čim bilo ko unese novi red u bazu podataka
   dbRef.on("child_added", function(snapshot) {
-    if (isInitialLoad) return; // Ignoriši stare zapise pri prvom učitavanju stranice
+    if (isInitialLoad) return; 
     const newEntry = snapshot.val();
     showNotification(newEntry, "add");
   });
 
-  // Slušač koji reaguje čim bilo ko obriše red iz baze podataka
+  // Prati kada BILO KO obriše unos iz baze sa bilo kog uređaja
   dbRef.on("child_removed", function(snapshot) {
-    if (isInitialLoad) return; 
     const deletedEntry = snapshot.val();
     showNotification(deletedEntry, "delete");
   });
@@ -243,7 +238,6 @@ function addRow() {
     return;
   }
 
-  // --- NEPROBOJNA PROVERA: MINUT PO MINUT ---
   const targetDate = String(date).trim();
   let maxSimultaneous = 0; 
   let conflicts = new Set();
@@ -310,31 +304,28 @@ function deleteRow(id) {
   }
 }
 
-// Funkcija za generisanje popup obaveštenja (Dodavanje i Brisanje)
 function showNotification(data, type = "add") {
   const container = document.getElementById("notification-container");
-  if (!container) return;
+  if (!container) return; // Ako kontejner ne postoji u HTML-u, funkcija staje ovde
 
   const toast = document.createElement("div");
   toast.className = "notification-toast";
 
   if (type === "delete") {
-    // Stil i tekst za izbrisane unose (Crveni tonovi za brisanje)
-    toast.style.borderLeft = "5px solid #ef4444";
+    toast.style.borderLeft = "5px solid #ef4444"; 
     toast.innerHTML = `
       <strong style="color: #ef4444;">❌ Izbrisan termin!</strong><br>
-      👤 <b>Vozač:</b> ${data.driver}<br>
-      🚖 <b>Vozilo:</b> ${data.vehicle}<br>
-      📅 <b>Datum:</b> ${data.date}<br>
-      🕒 <b>Vreme:</b> ${data.chargeStart} - ${data.chargeEnd}
+      👤 <b>Vozač:</b> ${data.driver || "—"}<br>
+      🚖 <b>Vozilo:</b> ${data.vehicle || "—"}<br>
+      📅 <b>Datum:</b> ${data.date || "—"}<br>
+      🕒 <b>Vreme:</b> ${data.chargeStart || "—"} - ${data.chargeEnd || "—"}
     `;
   } else {
-    // Standardni izgled za dodavanje novog unosa (Zeleni tonovi)
     toast.innerHTML = `
       <strong>⚡ Dodat novi termin!</strong><br>
-      👤 <b>Vozač:</b> ${data.driver}<br>
-      🚖 <b>Vozilo:</b> ${data.vehicle}<br>
-      🕒 <b>Punjenje:</b> ${data.chargeStart} - ${data.chargeEnd}
+      👤 <b>Vozač:</b> ${data.driver || "—"}<br>
+      🚖 <b>Vozilo:</b> ${data.vehicle || "—"}<br>
+      🕒 <b>Punjenje:</b> ${data.chargeStart || "—"} - ${data.chargeEnd || "—"}
     `;
   }
 
