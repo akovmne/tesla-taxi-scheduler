@@ -27,7 +27,6 @@ h1 {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Kontejner koji drži tabelu i omogućava čist horizontalni skrol */
 .table-card {
   padding: 15px;
 }
@@ -35,7 +34,7 @@ h1 {
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch; /* Tečan skrol za iOS Safari */
+  -webkit-overflow-scrolling: touch;
 }
 
 h2 {
@@ -138,10 +137,9 @@ button:hover {
   background: #dc2626;
 }
 
-/* FIKSIRANI PC IZGLED TABELE ZA SVE URREĐAJE */
 table {
   width: 100%;
-  min-width: 800px; /* Force-uje tabelu da na telefonu zadrži punu širinu i raspored kao na PC-ju */
+  min-width: 800px;
   border-collapse: collapse;
   margin-top: 10px;
 }
@@ -150,7 +148,7 @@ th, td {
   border: 1px solid #334155;
   padding: 12px 14px;
   text-align: center;
-  white-space: nowrap; /* Strogo zabranjuje prelamanje teksta u novi red */
+  white-space: nowrap;
 }
 
 th {
@@ -182,4 +180,34 @@ td {
 }
 .flatpickr-time .numInputWrapper span.arrowDown:after {
   border-top-color: #38bdf8 !important;
+}
+
+/* NOVI STILOVI ZA LIVE OBAVEŠTENJA */
+#notification-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 350px;
+  width: 100%;
+}
+
+.notification-toast {
+  background: #1e293b;
+  border-left: 4px solid #38bdf8;
+  color: white;
+  padding: 15px;
+  border-radius: 6px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  animation: slideIn 0.3s ease forwards;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
