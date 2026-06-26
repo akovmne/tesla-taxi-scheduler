@@ -1,4 +1,3 @@
-// Konfiguracija tvog Firebase projekta
 const firebaseConfig = {
   apiKey: "AIzaSyA_wcdHfOVXJkS4Sm6ihjhaeGyrRjH9r1w",
   authDomain: "tesla-punjaci.firebaseapp.com",
@@ -9,7 +8,6 @@ const firebaseConfig = {
   appId: "1:140620994358:web:9bd2cbeaee436edea00597"
 };
 
-// Inicijalizacija baze podataka preko punog Config-a
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -19,11 +17,12 @@ let currentSort = "";
 let sortDirection = "asc";
 let fpInstances = [];
 let globalData = []; 
+let isInitialLoad = true; // Sprečava lažne notifikacije starih unosa pri osvežavanju
 
 window.onload = function() {
   initTimePickers();
   
-  // Sinhronizacija u realnom vremenu na svim uređajima istovremeno
+  // Sinhronizacija tabele u realnom vremenu
   dbRef.on("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     
@@ -33,8 +32,16 @@ window.onload = function() {
     }));
     
     renderTable();
+    isInitialLoad = false; // Nakon prvog povlačenja podataka, aktiviramo "live" režim za obaveštenja
   }, function(error) {
     console.error("Greška pri čitanju iz Firebase baze: ", error);
+  });
+
+  // Slušač koji reaguje čim bilo ko unese novi red u bazu podataka
+  dbRef.on("child_added", function(snapshot) {
+    if (isInitialLoad) return; // Ignoriši stare zapise pri učitavanju
+    const newEntry = snapshot.val();
+    showNotification(newEntry);
   });
 };
 
@@ -103,7 +110,6 @@ function sortTable(column) {
   renderTable();
 }
 
-// Stabilna funkcija poređenja prilagođena za desktop i mobilne pretraživače (Safari/Chrome)
 function compareValues(a, b, isDate = false) {
   a = a || "";
   b = b || "";
@@ -137,18 +143,22 @@ function renderTable() {
     const matchVehicle = String(item.vehicle || "").toLowerCase().includes(f.vehicle);
     const matchShift = String(item.shift || "").toLowerCase().includes(f.shift);
 
-    const times = [
-      toMinutes(item.chargeStart),
-      toMinutes(item.chargeEnd)
-    ].filter(t => t !== null);
+    const startMin = toMinutes(item.chargeStart);
+    const endMin = toMinutes(item.chargeEnd);
 
     let matchTime = true;
 
-    if (fromMin !== null) {
-      matchTime = times.some(t => t >= fromMin);
+    // Ako je upisan samo početak filtera, traži sve termine od tog vremena pa nadalje
+    if (fromMin !== null && toMin === null) {
+      matchTime = (startMin !== null && startMin >= fromMin);
     }
-    if (toMin !== null) {
-      matchTime = matchTime && times.some(t => t <= toMin);
+    // Ako je upisan samo kraj filtera
+    else if (fromMin === null && toMin !== null) {
+      matchTime = (endMin !== null && endMin <= toMin);
+    }
+    // Ako su upisana oba vremena, traži presek
+    else if (fromMin !== null && toMin !== null) {
+      matchTime = (startMin !== null && startMin >= fromMin) && (endMin !== null && endMin <= toMin);
     }
 
     return matchDriver && matchVehicle && matchShift && matchTime;
@@ -168,7 +178,6 @@ function renderTable() {
     return;
   }
 
-  // Čisto generisanje PC strukture redova i kolona
   filtered.forEach(item => {
     body.innerHTML += `
       <tr>
@@ -203,20 +212,55 @@ function resetFilter() {
 
 function addRow() {
   const driver = document.getElementById("driver").value;
-  const vehicle = document.getElementById("vehicle").value;
+  const vehicle = document.getElementById("vehicle").value.trim().toUpperCase();
   const date = document.getElementById("date").value;
   const shift = document.getElementById("shift").value;
   const chargeStart = document.getElementById("chargeStart").value;
   const chargeEnd = document.getElementById("chargeEnd").value;
 
-  if (!driver.trim() || !vehicle.trim() || !date.trim()) {
-    alert("Unesite vozača, vozilo i datum");
+  if (!driver.trim() || !vehicle.trim() || !date.trim() || !chargeStart || !chargeEnd) {
+    alert("Unesite vozača, vozilo, datum, početak i kraj punjenja!");
     return;
   }
 
+  const newStart = toMinutes(chargeStart);
+  const newEnd = toMinutes(chargeEnd);
+
+  if (newStart >= newEnd) {
+    alert("Kraj punjenja mora biti nakon početka punjenja!");
+    return;
+  }
+
+  // --- LOGIKA PROVERE PREKLAPANJA TERMINA ZA ISTO VOZILO I ISTI DAN ---
+  let occupiedBy = null;
+  
+  for (let i = 0; i < globalData.length; i++) {
+    const existing = globalData[i];
+    
+    // Provera da li je isti datum i isto vozilo
+    if (existing.date === date && existing.vehicle.trim().toUpperCase() === vehicle) {
+      const extStart = toMinutes(existing.chargeStart);
+      const extEnd = toMinutes(existing.chargeEnd);
+      
+      if (extStart !== null && extEnd !== null) {
+        // Uslov za preklapanje vremenskih intervala
+        if (newStart < extEnd && newEnd > extStart) {
+          occupiedBy = existing;
+          break;
+        }
+      }
+    }
+  }
+
+  if (occupiedBy) {
+    alert(`⚠️ TERMIN JE ZAUZET!\n\nVozač: ${occupiedBy.driver}\nVozilo: ${occupiedBy.vehicle}\nTermin: ${occupiedBy.chargeStart}h - ${occupiedBy.chargeEnd}h`);
+    return;
+  }
+  // -----------------------------------------------------------------
+
   dbRef.push({
     driver: driver.trim(),
-    vehicle: vehicle.trim(),
+    vehicle: vehicle,
     date,
     shift: shift.trim(),
     chargeStart,
@@ -244,4 +288,29 @@ function deleteRow(id) {
       alert("Greška pri brisanju: " + error.message);
     });
   }
+}
+
+// Funkcija za generisanje popup prozorčića u uglu ekrana za nove unose
+function showNotification(data) {
+  const container = document.getElementById("notification-container");
+  if (!container) return;
+
+  const toast = document.createElement("div");
+  toast.className = "notification-toast";
+  toast.innerHTML = `
+    <strong>⚡ Dodat novi termin!</strong><br>
+    👤 <b>Vozač:</b> ${data.driver}<br>
+    🚖 <b>Vozilo:</b> ${data.vehicle}<br>
+    🕒 <b>Punjenje:</b> ${data.chargeStart} - ${data.chargeEnd}
+  `;
+
+  container.appendChild(toast);
+
+  // Automatski briše obaveštenje sa ekrana nakon 6 sekundi
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "scale(0.9)";
+    toast.style.transition = "all 0.4s ease";
+    setTimeout(() => toast.remove(), 400);
+  }, 6000);
 }
