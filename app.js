@@ -19,15 +19,19 @@ let currentSort = "";
 let sortDirection = "asc";
 let fpInstances = [];
 let globalData = []; 
-let isInitialLoad = true; // Sprečava lažne notifikacije starih unosa pri osvežavanju stranice
-
-// Niz koji čuva ID-eve unosa za koje je već prikazana notifikacija o brisanju (sprečava dupliranje)
+let isInitialLoad = true; 
 let notifiedDeletions = [];
+
+// Funkcija koja detektuje Enter pritisak na tastaturi i pokreće filtriranje
+function checkEnter(event) {
+  if (event.key === "Enter") {
+    renderTable();
+  }
+}
 
 window.onload = function() {
   initTimePickers();
   
-  // Sinhronizacija u realnom vremenu na svim uređajima istovremeno
   dbRef.on("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     
@@ -37,25 +41,22 @@ window.onload = function() {
     }));
     
     renderTable();
-    isInitialLoad = false; // Nakon prvog povlačenja podataka, aktiviramo "live" režim za obaveštenja
+    isInitialLoad = false; 
   }, function(error) {
     console.error("Greška pri čitanju iz Firebase baze: ", error);
   });
 
-  // Prati kada bilo ko doda novi red u bazu podataka
   dbRef.on("child_added", function(snapshot) {
     if (isInitialLoad) return; 
     const newEntry = snapshot.val();
     showNotification(newEntry, "add");
   });
 
-  // Prati kada je red uklonjen (reaguje na akcije sa svih uređaja)
   dbRef.on("child_removed", function(snapshot) {
     if (isInitialLoad) return;
     const deletedId = snapshot.key;
     const deletedEntry = snapshot.val();
     
-    // Ako za ovaj ID već NISMO prikazali poruku (npr. obrisao je neko drugi na svom telefonu)
     if (!notifiedDeletions.includes(deletedId)) {
       if (deletedEntry && deletedEntry.driver) {
         notifiedDeletions.push(deletedId);
@@ -75,10 +76,7 @@ function initTimePickers() {
     dateFormat: "H:i",
     time_24hr: true,
     minuteIncrement: 5, 
-    disableMobile: "true",
-    onChange: function() {
-      renderTable();
-    }
+    disableMobile: "true"
   });
   
   fpInstances = Array.isArray(instances) ? instances : [instances];
@@ -131,6 +129,7 @@ function sortTable(column) {
   renderTable();
 }
 
+// Funkcija za poređenje vrednosti tokom sortiranja
 function compareValues(a, b, isDate = false) {
   a = a || "";
   b = b || "";
@@ -244,4 +243,125 @@ function addRow() {
   const newStart = toMinutes(chargeStart);
   const newEnd = toMinutes(chargeEnd);
 
-  if (
+  if (newStart === null || newEnd === null) {
+    alert("Greška u formatu vremena!");
+    return;
+  }
+
+  if (newStart >= newEnd) {
+    alert("Kraj punjenja mora biti nakon početka punjenja!");
+    return;
+  }
+
+  const targetDate = String(date).trim();
+  let maxSimultaneous = 0; 
+  let conflicts = new Set();
+
+  for (let minute = newStart; minute < newEnd; minute++) {
+    let activeVehiclesAtThisMinute = 0;
+
+    for (let i = 0; i < globalData.length; i++) {
+      const existing = globalData[i];
+
+      if (String(existing.date).trim() === targetDate) {
+        const extStart = toMinutes(existing.chargeStart);
+        const extEnd = toMinutes(existing.chargeEnd);
+
+        if (extStart !== null && extEnd !== null) {
+          if (minute >= extStart && minute < extEnd) {
+            activeVehiclesAtThisMinute++;
+            conflicts.add(`• Vozač: ${existing.driver} (${existing.vehicle}) [${existing.chargeStart} - ${existing.chargeEnd}]`);
+          }
+        }
+      }
+    }
+
+    if (activeVehiclesAtThisMinute > maxSimultaneous) {
+      maxSimultaneous = activeVehiclesAtThisMinute;
+    }
+  }
+
+  if (maxSimultaneous >= 2) {
+    const conflictList = Array.from(conflicts).join("\n");
+    alert(`⚠️ SVA MESTA NA PUNJAČIMA SU ZAUZETA!\n\nU traženom periodu već postoje unosi koji popunjavaju oba mesta:\n${conflictList}\n\nNemoguće je dodati treći unos.`);
+    return;
+  }
+
+  dbRef.push({
+    driver: driver.trim(),
+    vehicle: vehicle,
+    date: targetDate,
+    shift: shift.trim(),
+    chargeStart: String(chargeStart).trim(),
+    chargeEnd: String(chargeEnd).trim()
+  }).then(() => {
+    document.getElementById("driver").value = "";
+    document.getElementById("vehicle").value = "";
+    document.getElementById("date").value = "";
+    document.getElementById("shift").value = "";
+    
+    if (document.getElementById("chargeStart") && document.getElementById("chargeStart")._flatpickr) {
+      document.getElementById("chargeStart")._flatpickr.clear();
+    }
+    if (document.getElementById("chargeEnd") && document.getElementById("chargeEnd")._flatpickr) {
+      document.getElementById("chargeEnd")._flatpickr.clear();
+    }
+  }).catch(function(error) {
+    alert("Greška pri upisu u bazu: " + error.message);
+  });
+}
+
+function deleteRow(id) {
+  const matchEntry = globalData.find(item => item.id === id);
+
+  if (!matchEntry) {
+    alert("Greška: Unos nije pronađen u tabeli.");
+    return;
+  }
+
+  if (confirm(`Da li ste sigurni da želite da obrišete termin za vozača ${matchEntry.driver}?`)) {
+    notifiedDeletions.push(id);
+    showNotification(matchEntry, "delete");
+
+    firebase.database().ref("raspored/" + id).remove().catch(function(error) {
+      alert("Greška pri brisanju sa servera: " + error.message);
+      notifiedDeletions = notifiedDeletions.filter(item => item !== id);
+    });
+  }
+}
+
+function showNotification(data, type = "add") {
+  const container = document.getElementById("notification-container");
+  if (!container) return; 
+
+  const toast = document.createElement("div");
+  toast.className = "notification-toast";
+
+  if (type === "delete") {
+    toast.style.borderLeft = "5px solid #ef4444"; 
+    toast.innerHTML = `
+      <strong style="color: #ef4444;">❌ Izbrisan termin!</strong><br>
+      👤 <b>Vozač:</b> ${data.driver || "—"}<br>
+      🚖 <b>Vozilo:</b> ${data.vehicle || "—"}<br>
+      📅 <b>Datum:</b> ${data.date || "—"} <br>
+      🕒 <b>Vreme:</b> ${data.chargeStart || "—"} - ${data.chargeEnd || "—"}
+    `;
+  } else {
+    toast.style.borderLeft = "5px solid #10b981";
+    toast.innerHTML = `
+      <strong style="color: #10b981;">⚡ Dodat novi termin!</strong><br>
+      👤 <b>Vozač:</b> ${data.driver || "—"}<br>
+      🚖 <b>Vozilo:</b> ${data.vehicle || "—"}<br>
+      🕒 <b>Punjenje:</b> ${data.chargeStart || "—"} - ${data.chargeEnd || "—"}
+    `;
+  }
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "scale(0.9)";
+    toast.style.transition = "all 0.4s ease";
+    setTimeout(() => toast.remove(), 400);
+  }, 6000);
+}
