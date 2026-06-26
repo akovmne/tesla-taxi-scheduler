@@ -20,7 +20,9 @@ let sortDirection = "asc";
 let fpInstances = [];
 let globalData = []; 
 let isInitialLoad = true; // Sprečava lažne notifikacije starih unosa pri osvežavanju stranice
-let myDeletedId = null;   // Pamti ID koji je ovaj korisnik ručno obrisao da spreči duplu notifikaciju
+
+// Niz koji čuva ID-eve unosa za koje je već prikazana notifikacija o brisanju (sprečava dupliranje)
+let notifiedDeletions = [];
 
 window.onload = function() {
   initTimePickers();
@@ -47,21 +49,18 @@ window.onload = function() {
     showNotification(newEntry, "add");
   });
 
-  // Prati kada je red uklonjen (bilo sa ovog, bilo sa tuđeg uređaja)
+  // Prati kada je red uklonjen (reaguje na akcije sa svih uređaja)
   dbRef.on("child_removed", function(snapshot) {
     if (isInitialLoad) return;
     const deletedId = snapshot.key;
     const deletedEntry = snapshot.val();
     
-    // AKO JE OVO OBRIŠU NA DRUGOM TELEFONU: Prikazuje se notifikacija
-    // Ako smo obrisali mi sami, preskačemo jer je deleteRow() već izbacio poruku
-    if (deletedId !== myDeletedId) {
+    // Ako za ovaj ID već NISMO prikazali poruku (npr. obrisao je neko drugi na svom telefonu)
+    if (!notifiedDeletions.includes(deletedId)) {
       if (deletedEntry && deletedEntry.driver) {
+        notifiedDeletions.push(deletedId);
         showNotification(deletedEntry, "delete");
       }
-    } else {
-      // Resetujemo marker čim prođe provera, spremno za sledeće brisanje
-      myDeletedId = null;
     }
   });
 };
@@ -245,108 +244,4 @@ function addRow() {
   const newStart = toMinutes(chargeStart);
   const newEnd = toMinutes(chargeEnd);
 
-  if (newStart === null || newEnd === null) {
-    alert("Greška u formatu vremena!");
-    return;
-  }
-
-  if (newStart >= newEnd) {
-    alert("Kraj punjenja mora biti nakon početka punjenja!");
-    return;
-  }
-
-  const targetDate = String(date).trim();
-  let maxSimultaneous = 0; 
-  let conflicts = new Set();
-
-  for (let minute = newStart; minute < newEnd; minute++) {
-    let activeVehiclesAtThisMinute = 0;
-
-    for (let i = 0; i < globalData.length; i++) {
-      const existing = globalData[i];
-
-      if (String(existing.date).trim() === targetDate) {
-        const extStart = toMinutes(existing.chargeStart);
-        const extEnd = toMinutes(existing.chargeEnd);
-
-        if (extStart !== null && extEnd !== null) {
-          if (minute >= extStart && minute < extEnd) {
-            activeVehiclesAtThisMinute++;
-            conflicts.add(`• Vozač: ${existing.driver} (${existing.vehicle}) [${existing.chargeStart} - ${existing.chargeEnd}]`);
-          }
-        }
-      }
-    }
-
-    if (activeVehiclesAtThisMinute > maxSimultaneous) {
-      maxSimultaneous = activeVehiclesAtThisMinute;
-    }
-  }
-
-  if (maxSimultaneous >= 2) {
-    const conflictList = Array.from(conflicts).join("\n");
-    alert(`⚠️ SVA MESTA NA PUNJAČIMA SU ZAUZETA!\n\nU traženom periodu već postoje unosi koji popunjavaju oba mesta:\n${conflictList}\n\nNemoguće je dodati treći unos.`);
-    return;
-  }
-
-  dbRef.push({
-    driver: driver.trim(),
-    vehicle: vehicle,
-    date: targetDate,
-    shift: shift.trim(),
-    chargeStart: String(chargeStart).trim(),
-    chargeEnd: String(chargeEnd).trim()
-  }).then(() => {
-    document.getElementById("driver").value = "";
-    document.getElementById("vehicle").value = "";
-    document.getElementById("date").value = "";
-    document.getElementById("shift").value = "";
-    
-    if (document.getElementById("chargeStart") && document.getElementById("chargeStart")._flatpickr) {
-      document.getElementById("chargeStart")._flatpickr.clear();
-    }
-    if (document.getElementById("chargeEnd") && document.getElementById("chargeEnd")._flatpickr) {
-      document.getElementById("chargeEnd")._flatpickr.clear();
-    }
-  }).catch(function(error) {
-    alert("Greška pri upisu u bazu: " + error.message);
-  });
-}
-
-function deleteRow(id) {
-  const matchEntry = globalData.find(item => item.id === id);
-
-  if (!matchEntry) {
-    alert("Greška: Unos nije pronađen u tabeli.");
-    return;
-  }
-
-  if (confirm(`Da li ste sigurni da želite da obrišete termin za vozača ${matchEntry.driver}?`)) {
-    // Pamti se ID koji smo obrisali kako bi sprečili dupliranje poruke preko child_removed slušača
-    myDeletedId = id;
-
-    // Odmah aktiviramo lokalnu notifikaciju na ekranu
-    showNotification(matchEntry, "delete");
-
-    // Šaljemo naredbu za brisanje u Firebase bazu
-    firebase.database().ref("raspored/" + id).remove().catch(function(error) {
-      alert("Greška pri brisanju sa servera: " + error.message);
-      myDeletedId = null; // Resetujemo u slučaju neuspeha na mreži
-    });
-  }
-}
-
-function showNotification(data, type = "add") {
-  const container = document.getElementById("notification-container");
-  if (!container) return; 
-
-  const toast = document.createElement("div");
-  toast.className = "notification-toast";
-
-  if (type === "delete") {
-    toast.style.borderLeft = "5px solid #ef4444"; 
-    toast.innerHTML = `
-      <strong style="color: #ef4444;">❌ Izbrisan termin!</strong><br>
-      👤 <b>Vozač:</b> ${data.driver || "—"}<br>
-      🚖 <b>Vozilo:</b> ${data.vehicle || "—"}<br>
-      📅 <b>Datum:</b> ${data.date || "—"}
+  if (
