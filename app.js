@@ -22,7 +22,7 @@ let globalData = [];
 let isInitialLoad = true; 
 let notifiedDeletions = [];
 
-// Funkcija koja detektuje Enter pritisak na tastaturi i pokreće filtriranje
+// Detekcija pritiska na taster Enter za aktivaciju filtera
 function checkEnter(event) {
   if (event.key === "Enter") {
     renderTable();
@@ -129,7 +129,6 @@ function sortTable(column) {
   renderTable();
 }
 
-// Funkcija za poređenje vrednosti tokom sortiranja
 function compareValues(a, b, isDate = false) {
   a = a || "";
   b = b || "";
@@ -343,7 +342,7 @@ function showNotification(data, type = "add") {
       <strong style="color: #ef4444;">❌ Izbrisan termin!</strong><br>
       👤 <b>Vozač:</b> ${data.driver || "—"}<br>
       🚖 <b>Vozilo:</b> ${data.vehicle || "—"}<br>
-      📅 <b>Datum:</b> ${data.date || "—"} <br>
+      📅 <b>Datum:</b> ${data.date || "—"}<br>
       🕒 <b>Vreme:</b> ${data.chargeStart || "—"} - ${data.chargeEnd || "—"}
     `;
   } else {
