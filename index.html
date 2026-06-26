@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Tesla Taxi Raspored</title>
-  <link rel="stylesheet" href="./style.css"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css"/>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
 </head>
 <body>
 
@@ -19,19 +19,19 @@
     <div class="card">
       <h2>🔎 Filter</h2>
       <div class="grid-inputs">
-        <input id="filterDriver" placeholder="Vozač" oninput="renderTable()"/>
-        <input id="filterVehicle" placeholder="Vozilo (T-01)" oninput="renderTable()"/>
-        <input id="filterShift" placeholder="Smjena (npr. 1)" oninput="renderTable()"/>
+        <input id="filterDriver" placeholder="Vozač" oninput="renderTable()">
+        <input id="filterVehicle" placeholder="Vozilo (T-01)" oninput="renderTable()">
+        <input id="filterShift" placeholder="Smjena (npr. 1)" oninput="renderTable()">
       </div>
       
       <div class="grid-inputs">
         <div>
           <label>Vrijeme OD</label>
-          <input id="filterTimeFrom" class="time-picker" placeholder="Izaberi vreme"/>
+          <input id="filterTimeFrom" class="time-picker" placeholder="Izaberi vreme">
         </div>
         <div>
           <label>Vrijeme DO</label>
-          <input id="filterTimeTo" class="time-picker" placeholder="Izaberi vreme"/>
+          <input id="filterTimeTo" class="time-picker" placeholder="Izaberi vreme">
         </div>
       </div>
 
@@ -41,23 +41,23 @@
     <div class="card">
       <h2>📅 Unesi novi termin punjenja</h2>
       <div class="grid-inputs">
-        <input id="driver" placeholder="Ime vozača"/>
-        <input id="vehicle" placeholder="Vozilo (npr. T-03)"/>
+        <input id="driver" placeholder="Ime vozača">
+        <input id="vehicle" placeholder="Vozilo (npr. T-03)">
       </div>
       
       <div class="grid-inputs">
-        <input id="date" type="date"/>
-        <input id="shift" placeholder="Smjena (1, 2 ili 07:00 - 15:00)"/>
+        <input id="date" type="date">
+        <input id="shift" placeholder="Smjena (1, 2 ili 07:00 - 15:00)">
       </div>
 
       <div class="grid-inputs">
         <div>
           <label>Početak punjenja</label>
-          <input id="chargeStart" class="time-picker" placeholder="Izaberi vreme"/>
+          <input id="chargeStart" class="time-picker" placeholder="Izaberi vreme">
         </div>
         <div>
           <label>Kraj punjenja</label>
-          <input id="chargeEnd" class="time-picker" placeholder="Izaberi vreme"/>
+          <input id="chargeEnd" class="time-picker" placeholder="Izaberi vreme">
         </div>
       </div>
 
@@ -78,7 +78,7 @@
               <th>Akcija</th>
             </tr>
           </thead>
-          <tbody id=\"tableBody\">
+          <tbody id="tableBody">
             </tbody>
         </table>
       </div>
