@@ -37,7 +37,6 @@ window.onload = function() {
     
     renderTable();
     
-    // Isključujemo initial load nakon prvog učitavanja podataka
     if (isInitialLoad) {
       isInitialLoad = false;
     }
@@ -45,19 +44,19 @@ window.onload = function() {
     console.error("Greška pri čitanju iz Firebase baze: ", error);
   });
 
-  // Novi unos na bilo kom uređaju
+  // Novi unos
   dbRef.on("child_added", function(snapshot) {
     if (!isInitialLoad) {
-      const newEntry = snapshot.val();
-      showToast(`➕ Dodat raspored: ${newEntry.driver || '—'} (${newEntry.vehicle || '—'})`);
+      const entry = snapshot.val();
+      showToast(entry, "add");
     }
   });
 
-  // Brisanje unosa na bilo kom uređaju
+  // Brisanje unosa
   dbRef.on("child_removed", function(snapshot) {
     if (!isInitialLoad) {
-      const deletedEntry = snapshot.val();
-      showToast(`❌ Obrisan raspored za: ${deletedEntry.driver || '—'}`, true);
+      const entry = snapshot.val();
+      showToast(entry, "delete");
     }
   });
 };
@@ -138,145 +137,3 @@ function compareValues(a, b, isDate = false) {
   }
 
   a = String(a).toLowerCase();
-  b = String(b).toLowerCase();
-
-  if (a < b) return sortDirection === "asc" ? -1 : 1;
-  if (a > b) return sortDirection === "asc" ? 1 : -1;
-  return 0;
-}
-
-function renderTable() {
-  const body = document.getElementById("tableBody");
-  if (!body) return;
-
-  const f = getFilters();
-  body.innerHTML = "";
-
-  const fromMin = toMinutes(f.from);
-  const toMin = toMinutes(f.to);
-
-  let filtered = globalData.filter(item => {
-    const matchDriver = String(item.driver || "").toLowerCase().includes(f.driver);
-    const matchVehicle = String(item.vehicle || "").toLowerCase().includes(f.vehicle);
-    const matchShift = String(item.shift || "").toLowerCase().includes(f.shift);
-
-    const times = [
-      toMinutes(item.chargeStart),
-      toMinutes(item.chargeEnd)
-    ].filter(t => t !== null);
-
-    let matchTime = true;
-
-    if (fromMin !== null) {
-      matchTime = times.some(t => t >= fromMin);
-    }
-    if (toMin !== null) {
-      matchTime = matchTime && times.some(t => t <= toMin);
-    }
-
-    return matchDriver && matchVehicle && matchShift && matchTime;
-  });
-
-  if (currentSort) {
-    filtered.sort((a, b) => {
-      if (currentSort === "date") {
-        return compareValues(a.date, b.date, true);
-      }
-      return compareValues(a[currentSort], b[currentSort], false);
-    });
-  }
-
-  if (filtered.length === 0) {
-    body.innerHTML = `<tr><td colspan="7" style="text-align:center; background:#1e293b;">Nema rezultata</td></tr>`;
-    return;
-  }
-
-  filtered.forEach(item => {
-    body.innerHTML += `
-      <tr>
-        <td>${clean(item.driver)}</td>
-        <td>${clean(item.vehicle)}</td>
-        <td>${clean(item.date)}</td>
-        <td>${clean(item.shift)}</td>
-        <td>${format24(item.chargeStart)}</td>
-        <td>${format24(item.chargeEnd)}</td>
-        <td>
-          <button class="delete-btn" onclick="deleteRow('${item.id}')" style="padding: 4px 8px; margin: 0;">X</button>
-        </td>
-      </tr>
-    `;
-  });
-}
-
-function resetFilter() {
-  if (document.getElementById("filterDriver")) document.getElementById("filterDriver").value = "";
-  if (document.getElementById("filterVehicle")) document.getElementById("filterVehicle").value = "";
-  if (document.getElementById("filterShift")) document.getElementById("filterShift").value = "";
-  
-  if (document.getElementById("filterTimeFrom") && document.getElementById("filterTimeFrom")._flatpickr) {
-    document.getElementById("filterTimeFrom")._flatpickr.clear();
-  }
-  if (document.getElementById("filterTimeTo") && document.getElementById("filterTimeTo")._flatpickr) {
-    document.getElementById("filterTimeTo")._flatpickr.clear();
-  }
-
-  renderTable();
-}
-
-function addRow() {
-  const driver = document.getElementById("driver").value;
-  const vehicle = document.getElementById("vehicle").value;
-  const date = document.getElementById("date").value;
-  const shift = document.getElementById("shift").value;
-  const chargeStart = document.getElementById("chargeStart").value;
-  const chargeEnd = document.getElementById("chargeEnd").value;
-
-  if (!driver.trim() || !vehicle.trim() || !date.trim()) {
-    alert("Unesite vozača, vozilo i datum");
-    return;
-  }
-
-  dbRef.push({
-    driver: driver.trim(),
-    vehicle: vehicle.trim(),
-    date,
-    shift: shift.trim(),
-    chargeStart,
-    chargeEnd
-  }).catch(function(error) {
-    alert("Greška pri upisu u bazu: " + error.message);
-  });
-
-  // Očisti polja
-  document.getElementById("driver").value = "";
-  document.getElementById("vehicle").value = "";
-  document.getElementById("date").value = "";
-  document.getElementById("shift").value = "";
-  
-  if (document.getElementById("chargeStart") && document.getElementById("chargeStart")._flatpickr) {
-    document.getElementById("chargeStart")._flatpickr.clear();
-  }
-  if (document.getElementById("chargeEnd") && document.getElementById("chargeEnd")._flatpickr) {
-    document.getElementById("chargeEnd")._flatpickr.clear();
-  }
-}
-
-function deleteRow(id) {
-  if (confirm("Da li ste sigurni da želite da obrišete ovaj unos?")) {
-    firebase.database().ref("raspored/" + id).remove().catch(function(error) {
-      alert("Greška pri brisanju: " + error.message);
-    });
-  }
-}
-
-// Toast notifikacije sa debouncing-om
-function showToast(message, isDelete = false) {
-  const now = Date.now();
-  if (now - lastToastTime < 800) return; // sprečava duplikate
-  lastToastTime = now;
-
-  const container = document.getElementById("toast-container");
-  if (!container) return;
-
-  const toast = document.createElement("div");
-  toast.className = isDelete ? "toast toast-delete" : "
