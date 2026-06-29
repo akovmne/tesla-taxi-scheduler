@@ -12,7 +12,7 @@
 
 <div class="container">
 
-  <h1>🚖 Tesla Taxi – Raspored na punjačima</h1>
+  <h1>𚖖 Tesla Taxi – Raspored na punjačima</h1>
 
   <div class="card">
     <h2>🔎 Filter</h2>
@@ -24,12 +24,12 @@
     
     <div class="grid-inputs">
       <div>
-        <label>Vrijeme OD</label>
-        <input id="filterTimeFrom" class="time-picker" placeholder="Izaberi vreme">
+        <label>Početak punjenja</label>
+        <input id="filterTimeFrom" class="time-picker" placeholder="Izaberi vrijeme">
       </div>
       <div>
-        <label>Vrijeme DO</label>
-        <input id="filterTimeTo" class="time-picker" placeholder="Izaberi vreme">
+        <label>Kraj punjenja</label>
+        <input id="filterTimeTo" class="time-picker" placeholder="Izaberi vrijeme">
       </div>
     </div>
 
@@ -54,11 +54,11 @@
     <div class="grid-inputs">
       <div>
         <label>Početak punjenja</label>
-        <input id="chargeStart" class="time-picker" placeholder="Izaberi vreme">
+        <input id="chargeStart" class="time-picker" placeholder="Izaberi vrijeme">
       </div>
       <div>
         <label>Kraj punjenja</label>
-        <input id="chargeEnd" class="time-picker" placeholder="Izaberi vreme">
+        <input id="chargeEnd" class="time-picker" placeholder="Izaberi vrijeme">
       </div>
     </div>
 
@@ -80,14 +80,13 @@
           </tr>
         </thead>
         <tbody id="tableBody">
-          </tbody>
+        </tbody>
       </table>
     </div>
   </div>
 
 </div>
 
-<!-- Kontejner za toast notifikacije u realnom vremenu -->
 <div id="toast-container"></div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
