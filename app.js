@@ -1,4 +1,3 @@
-<FILE file_path="/home/workdir/attachments/app.js">
 // Konfiguracija tvog Firebase projekta
 const firebaseConfig = {
   apiKey: "AIzaSyA_wcdHfOVXJkS4Sm6ihjhaeGyrRjH9r1w",
@@ -10,7 +9,7 @@ const firebaseConfig = {
   appId: "1:140620994358:web:9bd2cbeaee436edea00597"
 };
 
-// Inicijalizacija baze podataka
+// Inicijalizacija baze podataka preko punog Config-a
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -20,13 +19,14 @@ let currentSort = "";
 let sortDirection = "asc";
 let fpInstances = [];
 let globalData = []; 
-let isInitialLoad = true;
-let lastToastTime = 0;
+
+// Bilježimo tačno vrijeme pokretanja aplikacije na uređaju (u milisekundama)
+const appOpenTimestamp = Date.now();
 
 window.onload = function() {
   initTimePickers();
   
-  // Real-time sync
+  // 1. Sinhronizacija u realnom vremenu na svim uređajima istovremeno
   dbRef.on("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     
@@ -36,36 +36,42 @@ window.onload = function() {
     }));
     
     renderTable();
-    
-    if (isInitialLoad) {
-      isInitialLoad = false;
-    }
   }, function(error) {
     console.error("Greška pri čitanju iz Firebase baze: ", error);
   });
 
-  // Novi unos
+  // 2. Slušaj kada neko DODA novi unos na bilo kom uređaju
   dbRef.on("child_added", function(snapshot) {
-    if (!isInitialLoad) {
-      const entry = snapshot.val();
-      showToast(entry, "add");
+    const newEntry = snapshot.val();
+    
+    // Notifikacija se prikazuje samo ako je unos kreiran NAKON što je korisnik otvorio aplikaciju
+    if (newEntry && newEntry.createdAt && newEntry.createdAt > appOpenTimestamp) {
+      const driver = newEntry.driver || '—';
+      const vehicle = newEntry.vehicle || '—';
+      const start = format24(newEntry.chargeStart);
+      const end = format24(newEntry.chargeEnd);
+      
+      showToast(`➕ Dodat raspored:\nVozač: ${driver}\nVozilo: ${vehicle}\nVrijeme: ${start} - ${end}`);
     }
   });
 
-  // Brisanje
+  // 3. Slušaj kada neko OBRIŠE unos na bilo kom uređaju
   dbRef.on("child_removed", function(snapshot) {
-    if (!isInitialLoad) {
-      const entry = snapshot.val();
-      showToast(entry, "delete");
+    const deletedEntry = snapshot.val();
+    
+    if (deletedEntry) {
+      const driver = deletedEntry.driver || '—';
+      const vehicle = deletedEntry.vehicle || '—';
+      const start = format24(deletedEntry.chargeStart);
+      const end = format24(deletedEntry.chargeEnd);
+      
+      showToast(`❌ Obrisan raspored:\nVozač: ${driver}\nVozilo: ${vehicle}\nVrijeme: ${start} - ${end}`, true);
     }
   });
 };
 
 function initTimePickers() {
-  // Destroy previous instances
-  fpInstances.forEach(instance => {
-    if (instance && typeof instance.destroy === "function") instance.destroy();
-  });
+  fpInstances.forEach(instance => instance.destroy());
   fpInstances = [];
 
   const instances = flatpickr(".time-picker", {
@@ -73,14 +79,10 @@ function initTimePickers() {
     noCalendar: true,
     dateFormat: "H:i",
     time_24hr: true,
-    minuteIncrement: 5,
-    disableMobile: true,
-    onChange: function(selectedDates, dateStr, instance) {
-      // Only trigger table re-render for FILTER time pickers
-      const id = this.element ? this.element.id : "";
-      if (id.includes("filter")) {
-        renderTable();
-      }
+    minuteIncrement: 5, 
+    disableMobile: "true",
+    onChange: function() {
+      renderTable();
     }
   });
   
@@ -242,18 +244,19 @@ function addRow() {
     return;
   }
 
+  // Dodajemo serverski tajmstep kako bi drugi uređaji znali kada je tačno napravljen unos
   dbRef.push({
     driver: driver.trim(),
     vehicle: vehicle.trim(),
     date,
     shift: shift.trim(),
     chargeStart,
-    chargeEnd
+    chargeEnd,
+    createdAt: firebase.database.ServerValue.TIMESTAMP
   }).catch(function(error) {
     alert("Greška pri upisu u bazu: " + error.message);
   });
 
-  // Clear form
   document.getElementById("driver").value = "";
   document.getElementById("vehicle").value = "";
   document.getElementById("date").value = "";
@@ -275,30 +278,25 @@ function deleteRow(id) {
   }
 }
 
-// Rich Toast notification
-function showToast(entry, type) {
-  const now = Date.now();
-  if (now - lastToastTime < 800) return;
-  lastToastTime = now;
-
+// Funkcija za dinamički prikaz obavještenja (Toast)
+function showToast(message, isDelete = false) {
   const container = document.getElementById("toast-container");
   if (!container) return;
 
-  const timeInfo = `${format24(entry.chargeStart)} → ${format24(entry.chargeEnd)}`;
-  let message = type === "add" 
-    ? `➕ Dodat raspored\n${entry.driver || '—'} | ${entry.vehicle || '—'}\n${timeInfo}`
-    : `❌ Obrisan raspored\n${entry.driver || '—'} | ${entry.vehicle || '—'}\n${timeInfo}`;
-
   const toast = document.createElement("div");
-  toast.className = type === "delete" ? "toast toast-delete" : "toast";
+  toast.className = isDelete ? "toast toast-delete" : "toast";
+  
+  // white-space pre-line omogućava prelamanje redova unutar toasta (\n)
   toast.style.whiteSpace = "pre-line";
   toast.innerText = message;
 
   container.appendChild(toast);
 
+  // Ukloni notifikaciju automatski nakon 5 sekundi
   setTimeout(() => {
     toast.style.animation = "fadeOut 0.5s ease-out forwards";
-    setTimeout(() => toast.remove(), 500);
-  }, 4500);
+    setTimeout(() => {
+      toast.remove();
+    }, 500);
+  }, 5000);
 }
-</FILE>
