@@ -19,11 +19,13 @@ let sortDirection = "asc";
 let globalData = []; 
 let pickerInstances = [];
 
+// Flag koji sprječava da stari unosi aktiviraju notifikacije pri prvom otvaranju aplikacije
 let isInitialLoad = true;
 
 window.onload = function() {
   initGooglePickers();
   
+  // 1. Prvo očitavanje baze podataka i postavljanje tabele
   dbRef.once("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     globalData = Object.keys(dataObj).map(key => ({
@@ -31,9 +33,10 @@ window.onload = function() {
       ...dataObj[key]
     }));
     renderTable();
-    isInitialLoad = false;
+    isInitialLoad = false; // Kada završi prvo očitavanje postojećih podataka, dozvoljavamo notifikacije
   });
 
+  // Sinhronizacija tabele u realnom vremenu za sve izmjene u bazi
   dbRef.on("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     globalData = Object.keys(dataObj).map(key => ({
@@ -43,6 +46,7 @@ window.onload = function() {
     renderTable();
   });
 
+  // 2. Slušaj kada bilo ko DODA novi unos (radi na svim uređajima istovremeno)
   dbRef.on("child_added", function(snapshot) {
     if (isInitialLoad) return;
     const newEntry = snapshot.val();
@@ -51,6 +55,7 @@ window.onload = function() {
     }
   });
 
+  // 3. Slušaj kada bilo ko OBRIŠE unos (radi na svim uređajima istovremeno)
   dbRef.on("child_removed", function(snapshot) {
     if (isInitialLoad) return;
     const deletedEntry = snapshot.val();
@@ -60,7 +65,7 @@ window.onload = function() {
   });
 };
 
-// Inicijalizacija Google Calendar & Time pop-out stilova
+// Inicijalizacija Google Calendar & Time pop-out stilova preko Flatpickr biblioteke
 function initGooglePickers() {
   pickerInstances.forEach(ins => ins.destroy());
   pickerInstances = [];
@@ -70,7 +75,7 @@ function initGooglePickers() {
     locale: "sr",
     dateFormat: "Y-m-d",
     altInput: true,
-    altFormat: "d. M Y.", // Prikazuje npr. "25. Jun 2026." da izgleda profesionalno
+    altFormat: "d. M Y.", // Prikazuje npr. "25. Jun 2026."
     disableMobile: true
   });
 
@@ -80,7 +85,7 @@ function initGooglePickers() {
     noCalendar: true,
     dateFormat: "H:i",
     time_24hr: true,
-    minuteIncrement: 15, // Korak od 15 minuta, baš kao na Google Calendar
+    minuteIncrement: 15, // Korak od 15 minuta, baš kao na Google Calendaru
     disableMobile: true,
     onChange: function() {
       renderTable();
@@ -175,7 +180,6 @@ function renderTable() {
   }
 
   filtered.forEach(item => {
-    // Formatiramo prikaz datuma u tabeli da bude lepši
     let prikazDatuma = item.date || "—";
     if(item.date && item.date !== "—") {
       const d = new Date(item.date);
@@ -220,11 +224,24 @@ function addRow() {
   const chargeStart = document.getElementById("chargeStart").value;
   const chargeEnd = document.getElementById("chargeEnd").value;
 
-  if (!driver.trim() || !vehicle.trim() || !date.trim()) {
-    alert("Unesite vozača, vozilo i datum");
+  // 1. Osnovna validacija obaveznih polja
+  if (!driver.trim() || !vehicle.trim() || !date.trim() || !chargeStart.trim()) {
+    alert("Unesite vozača, vozilo, datum i početak punjenja.");
     return;
   }
 
+  // 2. PROVJERA DUPLIKATA: Brojanje postojećih unosa za isti dan i isto početno vrijeme punjenja
+  const istovremeniUnosi = globalData.filter(item => {
+    return item.date === date && item.chargeStart === chargeStart;
+  });
+
+  // Ako već postoje 2 vozila na punjaču u tom terminu, blokiraj unos i obavijesti korisnika
+  if (istovremeniUnosi.length >= 2) {
+    alert(`⚠️ Unos odbijen!\n\nNa dan ${formatDatum(date)} u ${chargeStart} h već su zakazana dva vozila na punjaču. Nije moguće dodati treće vozilo u istom terminu.`);
+    return; // Prekida proces i sprječava slanje u Firebase
+  }
+
+  // 3. Upis u bazu podataka ukoliko je provjera uspješno prošla
   dbRef.push({
     driver: driver.trim(),
     vehicle: vehicle.trim(),
@@ -233,16 +250,25 @@ function addRow() {
     chargeStart,
     chargeEnd
   }).catch(function(error) {
-    alert("Greška: " + error.message);
+    alert("Greška pri upisu u bazu: " + error.message);
   });
 
+  // Čišćenje tekstualnih input polja nakon uspješnog unosa
   document.getElementById("driver").value = "";
   document.getElementById("vehicle").value = "";
   document.getElementById("shift").value = "";
   
+  // Čišćenje kalendara i satova (Flatpickr)
   document.querySelectorAll(".card:nth-of-type(2) input.time-picker, .card:nth-of-type(2) input.date-picker").forEach(el => {
     if(el._flatpickr) el._flatpickr.clear();
   });
+}
+
+// Pomoćna funkcija za ljepši prikaz datuma u alert prozorčiću upozorenja
+function formatDatum(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('sr-RS', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function deleteRow(id) {
