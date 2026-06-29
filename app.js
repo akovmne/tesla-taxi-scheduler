@@ -9,7 +9,6 @@ const firebaseConfig = {
   appId: "1:140620994358:web:9bd2cbeaee436edea00597"
 };
 
-// Inicijalizacija baze podataka preko punog Config-a
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -18,12 +17,13 @@ const dbRef = firebase.database().ref("raspored");
 let currentSort = "";
 let sortDirection = "asc";
 let globalData = []; 
+let pickerInstances = [];
 
-// Flag koji sprječava da stari unosi aktiviraju notifikacije pri prvom otvaranju
 let isInitialLoad = true;
 
 window.onload = function() {
-  // 1. Prvo očitavanje baze i postavljanje tabele
+  initGooglePickers();
+  
   dbRef.once("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     globalData = Object.keys(dataObj).map(key => ({
@@ -34,7 +34,6 @@ window.onload = function() {
     isInitialLoad = false;
   });
 
-  // Sinhronizacija tabele u realnom vremenu za sve izmjene
   dbRef.on("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     globalData = Object.keys(dataObj).map(key => ({
@@ -44,36 +43,52 @@ window.onload = function() {
     renderTable();
   });
 
-  // 2. Slušaj kada bilo ko DODA novi unos (radi na svim uređajima istovremeno)
   dbRef.on("child_added", function(snapshot) {
     if (isInitialLoad) return;
-
     const newEntry = snapshot.val();
     if (newEntry) {
-      const driver = newEntry.driver || '—';
-      const vehicle = newEntry.vehicle || '—';
-      const start = format24(newEntry.chargeStart);
-      const end = format24(newEntry.chargeEnd);
-      
-      showToast(`➕ Dodat raspored:\nVozač: ${driver}\nVozilo: ${vehicle}\nVrijeme: ${start} - ${end}`);
+      showToast(`➕ Dodat raspored:\nVozač: ${newEntry.driver || '—'}\nVozilo: ${newEntry.vehicle || '—'}\nVrijeme: ${format24(newEntry.chargeStart)} - ${format24(newEntry.chargeEnd)}`);
     }
   });
 
-  // 3. Slušaj kada bilo ko OBRIŠE unos (radi na svim uređajima istovremeno)
   dbRef.on("child_removed", function(snapshot) {
     if (isInitialLoad) return;
-
     const deletedEntry = snapshot.val();
     if (deletedEntry) {
-      const driver = deletedEntry.driver || '—';
-      const vehicle = deletedEntry.vehicle || '—';
-      const start = format24(deletedEntry.chargeStart);
-      const end = format24(deletedEntry.chargeEnd);
-      
-      showToast(`❌ Obrisan raspored:\nVozač: ${driver}\nVozilo: ${vehicle}\nVrijeme: ${start} - ${end}`, true);
+      showToast(`❌ Obrisan raspored:\nVozač: ${deletedEntry.driver || '—'}\nVozilo: ${deletedEntry.vehicle || '—'}\nVrijeme: ${format24(deletedEntry.chargeStart)} - ${format24(deletedEntry.chargeEnd)}`, true);
     }
   });
 };
+
+// Inicijalizacija Google Calendar & Time pop-out stilova
+function initGooglePickers() {
+  pickerInstances.forEach(ins => ins.destroy());
+  pickerInstances = [];
+
+  // 1. Google Kalendar stil za datum
+  const datePickers = flatpickr(".date-picker", {
+    locale: "sr",
+    dateFormat: "Y-m-d",
+    altInput: true,
+    altFormat: "d. M Y.", // Prikazuje npr. "25. Jun 2026." da izgleda profesionalno
+    disableMobile: true
+  });
+
+  // 2. Google Time stil (Scrollable dropdown lista)
+  const timePickers = flatpickr(".time-picker", {
+    enableTime: true,
+    noCalendar: true,
+    dateFormat: "H:i",
+    time_24hr: true,
+    minuteIncrement: 15, // Korak od 15 minuta, baš kao na Google Calendar
+    disableMobile: true,
+    onChange: function() {
+      renderTable();
+    }
+  });
+
+  pickerInstances = [].concat(datePickers, timePickers);
+}
 
 function clean(v) {
   return v && v.trim() !== "" ? v : "—";
@@ -83,9 +98,7 @@ function format24(time) {
   if (!time) return "—";
   const match = time.match(/^(\d{1,2}):(\d{2})/);
   if (!match) return time;
-  let h = parseInt(match[1], 10);
-  let m = parseInt(match[2], 10);
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  return `${String(match[1]).padStart(2, "0")}:${String(match[2]).padStart(2, "0")}`;
 }
 
 function toMinutes(t) {
@@ -96,18 +109,12 @@ function toMinutes(t) {
 }
 
 function getFilters() {
-  const driverEl = document.getElementById("filterDriver");
-  const vehicleEl = document.getElementById("filterVehicle");
-  const shiftEl = document.getElementById("filterShift");
-  const fromEl = document.getElementById("filterTimeFrom");
-  const toEl = document.getElementById("filterTimeTo");
-
   return {
-    driver: driverEl ? driverEl.value.toLowerCase().trim() : "",
-    vehicle: vehicleEl ? vehicleEl.value.toLowerCase().trim() : "",
-    shift: shiftEl ? shiftEl.value.toLowerCase().trim() : "",
-    from: fromEl ? fromEl.value : "",
-    to: toEl ? toEl.value : ""
+    driver: document.getElementById("filterDriver") ? document.getElementById("filterDriver").value.toLowerCase().trim() : "",
+    vehicle: document.getElementById("filterVehicle") ? document.getElementById("filterVehicle").value.toLowerCase().trim() : "",
+    shift: document.getElementById("filterShift") ? document.getElementById("filterShift").value.toLowerCase().trim() : "",
+    from: document.getElementById("filterTimeFrom") ? document.getElementById("filterTimeFrom").value : "",
+    to: document.getElementById("filterTimeTo") ? document.getElementById("filterTimeTo").value : ""
   };
 }
 
@@ -122,18 +129,11 @@ function sortTable(column) {
 }
 
 function compareValues(a, b, isDate = false) {
-  a = a || "";
-  b = b || "";
-
+  a = a || ""; b = b || "";
   if (isDate) {
-    const timeA = a ? new Date(a).getTime() : 0;
-    const timeB = b ? new Date(b).getTime() : 0;
-    return sortDirection === "asc" ? timeA - timeB : timeB - timeA;
+    return sortDirection === "asc" ? new Date(a).getTime() - new Date(b).getTime() : new Date(b).getTime() - new Date(a).getTime();
   }
-
-  a = String(a).toLowerCase();
-  b = String(b).toLowerCase();
-
+  a = String(a).toLowerCase(); b = String(b).toLowerCase();
   if (a < b) return sortDirection === "asc" ? -1 : 1;
   if (a > b) return sortDirection === "asc" ? 1 : -1;
   return 0;
@@ -154,28 +154,17 @@ function renderTable() {
     const matchVehicle = String(item.vehicle || "").toLowerCase().includes(f.vehicle);
     const matchShift = String(item.shift || "").toLowerCase().includes(f.shift);
 
-    const times = [
-      toMinutes(item.chargeStart),
-      toMinutes(item.chargeEnd)
-    ].filter(t => t !== null);
-
+    const times = [toMinutes(item.chargeStart), toMinutes(item.chargeEnd)].filter(t => t !== null);
     let matchTime = true;
-
-    if (fromMin !== null) {
-      matchTime = times.some(t => t >= fromMin);
-    }
-    if (toMin !== null) {
-      matchTime = matchTime && times.some(t => t <= toMin);
-    }
+    if (fromMin !== null) matchTime = times.some(t => t >= fromMin);
+    if (toMin !== null) matchTime = matchTime && times.some(t => t <= toMin);
 
     return matchDriver && matchVehicle && matchShift && matchTime;
   });
 
   if (currentSort) {
     filtered.sort((a, b) => {
-      if (currentSort === "date") {
-        return compareValues(a.date, b.date, true);
-      }
+      if (currentSort === "date") return compareValues(a.date, b.date, true);
       return compareValues(a[currentSort], b[currentSort], false);
     });
   }
@@ -186,11 +175,20 @@ function renderTable() {
   }
 
   filtered.forEach(item => {
+    // Formatiramo prikaz datuma u tabeli da bude lepši
+    let prikazDatuma = item.date || "—";
+    if(item.date && item.date !== "—") {
+      const d = new Date(item.date);
+      if(!isNaN(d.getTime())) {
+        prikazDatuma = d.toLocaleDateString('sr-RS', { day: '2-digit', month: 'short', year: 'numeric' });
+      }
+    }
+
     body.innerHTML += `
       <tr>
         <td>${clean(item.driver)}</td>
         <td>${clean(item.vehicle)}</td>
-        <td>${clean(item.date)}</td>
+        <td>${prikazDatuma}</td>
         <td>${clean(item.shift)}</td>
         <td>${format24(item.chargeStart)}</td>
         <td>${format24(item.chargeEnd)}</td>
@@ -206,8 +204,10 @@ function resetFilter() {
   if (document.getElementById("filterDriver")) document.getElementById("filterDriver").value = "";
   if (document.getElementById("filterVehicle")) document.getElementById("filterVehicle").value = "";
   if (document.getElementById("filterShift")) document.getElementById("filterShift").value = "";
-  if (document.getElementById("filterTimeFrom")) document.getElementById("filterTimeFrom").value = "";
-  if (document.getElementById("filterTimeTo")) document.getElementById("filterTimeTo").value = "";
+  
+  document.querySelectorAll(".time-picker, .date-picker").forEach(el => {
+    if(el._flatpickr) el._flatpickr.clear();
+  });
 
   renderTable();
 }
@@ -233,15 +233,16 @@ function addRow() {
     chargeStart,
     chargeEnd
   }).catch(function(error) {
-    alert("Greška pri upisu u bazu: " + error.message);
+    alert("Greška: " + error.message);
   });
 
   document.getElementById("driver").value = "";
   document.getElementById("vehicle").value = "";
-  document.getElementById("date").value = "";
   document.getElementById("shift").value = "";
-  document.getElementById("chargeStart").value = "";
-  document.getElementById("chargeEnd").value = "";
+  
+  document.querySelectorAll(".card:nth-of-type(2) input.time-picker, .card:nth-of-type(2) input.date-picker").forEach(el => {
+    if(el._flatpickr) el._flatpickr.clear();
+  });
 }
 
 function deleteRow(id) {
@@ -255,18 +256,13 @@ function deleteRow(id) {
 function showToast(message, isDelete = false) {
   const container = document.getElementById("toast-container");
   if (!container) return;
-
   const toast = document.createElement("div");
   toast.className = isDelete ? "toast toast-delete" : "toast";
   toast.style.whiteSpace = "pre-line";
   toast.innerText = message;
-
   container.appendChild(toast);
-
   setTimeout(() => {
     toast.style.animation = "fadeOut 0.5s ease-out forwards";
-    setTimeout(() => {
-      toast.remove();
-    }, 500);
+    setTimeout(() => { toast.remove(); }, 500);
   }, 5000);
 }
