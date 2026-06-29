@@ -4,7 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Tesla Taxi Raspored</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
 
@@ -23,11 +28,11 @@
     <div class="grid-inputs">
       <div>
         <label>Početak punjenja</label>
-        <input id="filterTimeFrom" type="time" onchange="renderTable()">
+        <input id="filterTimeFrom" class="time-picker" placeholder="Izaberi vrijeme" readonly>
       </div>
       <div>
         <label>Kraj punjenja</label>
-        <input id="filterTimeTo" type="time" onchange="renderTable()">
+        <input id="filterTimeTo" class="time-picker" placeholder="Izaberi vrijeme" readonly>
       </div>
     </div>
 
@@ -45,18 +50,24 @@
     </div>
     
     <div class="grid-inputs">
-      <input id="date" type="date">
-      <input id="shift" placeholder="Smjena (1, 2 ili 07:00 - 15:00)">
+      <div>
+        <label>Datum rasporeda</label>
+        <input id="date" class="date-picker" placeholder="Izaberi datum" readonly>
+      </div>
+      <div>
+        <label>Smjena</label>
+        <input id="shift" placeholder="Smjena (1, 2 ili 07:00 - 15:00)">
+      </div>
     </div>
 
     <div class="grid-inputs">
       <div>
         <label>Početak punjenja</label>
-        <input id="chargeStart" type="time">
+        <input id="chargeStart" class="time-picker" placeholder="Izaberi vrijeme" readonly>
       </div>
       <div>
         <label>Kraj punjenja</label>
-        <input id="chargeEnd" type="time">
+        <input id="chargeEnd" class="time-picker" placeholder="Izaberi vrijeme" readonly>
       </div>
     </div>
 
@@ -89,6 +100,8 @@
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/sr.js"></script>
 <script src="./app.js"></script>
 
 </body>
