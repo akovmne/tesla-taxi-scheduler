@@ -95,6 +95,35 @@
     </div>
   </div>
 
+  <div class="card analytics-card">
+    <h2>📊 Analitika za prethodnih 30 dana</h2>
+    <div class="analytics-grid">
+      <div class="analytics-box">
+        <span class="analytics-num" id="statTotal">0</span>
+        <span class="analytics-label">Ukupno punjenja</span>
+      </div>
+      <div class="analytics-box">
+        <span class="analytics-num" id="statTopVehicle">—</span>
+        <span class="analytics-label">Najaktivnije vozilo</span>
+      </div>
+      <div class="analytics-box">
+        <span class="analytics-num" id="statTopDriver">—</span>
+        <span class="analytics-label">Najaktivniji vozač</span>
+      </div>
+    </div>
+    
+    <div class="analytics-details">
+      <div>
+        <h3>🚗 Punjenja po vozilima (Top 5):</h3>
+        <ul id="statsVehicleList" class="analytics-list"></ul>
+      </div>
+      <div>
+        <h3>👤 Top vozači (broj rezervacija):</h3>
+        <ul id="statsDriverList" class="analytics-list"></ul>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div id="googleModal" class="modal-overlay" style="display: none;">
@@ -104,7 +133,7 @@
       <h3 class="modal-title">Unos odbijen</h3>
     </div>
     <div id="modalMessage" class="modal-body">
-      Na ovaj datum i vreme već postoje dva zakazana vozila.
+      Na ovaj datum i vrijeme već postoje dva zakazana vozila.
     </div>
     <div class="modal-footer">
       <button type="button" onclick="closeModal()" class="modal-btn">U redu</button>
@@ -120,7 +149,5 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/sr.js"></script>
 <script src="./app.js"></script>
 
-</body>
-</html>
 </body>
 </html>
