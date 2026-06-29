@@ -17,15 +17,12 @@ const dbRef = firebase.database().ref("raspored");
 
 let currentSort = "";
 let sortDirection = "asc";
-let fpInstances = [];
 let globalData = []; 
 
 // Flag koji sprječava da stari unosi aktiviraju notifikacije pri prvom otvaranju
 let isInitialLoad = true;
 
 window.onload = function() {
-  initTimePickers();
-  
   // 1. Prvo očitavanje baze i postavljanje tabele
   dbRef.once("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
@@ -34,8 +31,6 @@ window.onload = function() {
       ...dataObj[key]
     }));
     renderTable();
-    
-    // Kada se završi prvo očitavanje postojećih podataka, dozvoljavamo notifikacije
     isInitialLoad = false;
   });
 
@@ -79,28 +74,6 @@ window.onload = function() {
     }
   });
 };
-
-// Inicijalizacija unapređenih pop-up satova lakih za klikanje i skrolovanje
-function initTimePickers() {
-  fpInstances.forEach(instance => instance.destroy());
-  fpInstances = [];
-
-  const instances = flatpickr(".time-picker", {
-    enableTime: true,
-    noCalendar: true,
-    dateFormat: "H:i",
-    time_24hr: true,
-    minuteIncrement: 5, 
-    disableMobile: "true", // Koristi Flatpickr prilagođen izgled i na telefonima umjesto nativnog sistema
-    wheelInput: true,      // Omogućava skrolovanje točkićem miša na PC-ju za promenu brojeva
-    static: false,
-    onChange: function() {
-      renderTable(); // Automatski filtrira tabelu čim se izabere sat u filteru
-    }
-  });
-  
-  fpInstances = Array.isArray(instances) ? instances : [instances];
-}
 
 function clean(v) {
   return v && v.trim() !== "" ? v : "—";
@@ -233,13 +206,8 @@ function resetFilter() {
   if (document.getElementById("filterDriver")) document.getElementById("filterDriver").value = "";
   if (document.getElementById("filterVehicle")) document.getElementById("filterVehicle").value = "";
   if (document.getElementById("filterShift")) document.getElementById("filterShift").value = "";
-  
-  if (document.getElementById("filterTimeFrom") && document.getElementById("filterTimeFrom")._flatpickr) {
-    document.getElementById("filterTimeFrom")._flatpickr.clear();
-  }
-  if (document.getElementById("filterTimeTo") && document.getElementById("filterTimeTo")._flatpickr) {
-    document.getElementById("filterTimeTo")._flatpickr.clear();
-  }
+  if (document.getElementById("filterTimeFrom")) document.getElementById("filterTimeFrom").value = "";
+  if (document.getElementById("filterTimeTo")) document.getElementById("filterTimeTo").value = "";
 
   renderTable();
 }
@@ -272,13 +240,8 @@ function addRow() {
   document.getElementById("vehicle").value = "";
   document.getElementById("date").value = "";
   document.getElementById("shift").value = "";
-  
-  if (document.getElementById("chargeStart") && document.getElementById("chargeStart")._flatpickr) {
-    document.getElementById("chargeStart")._flatpickr.clear();
-  }
-  if (document.getElementById("chargeEnd") && document.getElementById("chargeEnd")._flatpickr) {
-    document.getElementById("chargeEnd")._flatpickr.clear();
-  }
+  document.getElementById("chargeStart").value = "";
+  document.getElementById("chargeEnd").value = "";
 }
 
 function deleteRow(id) {
@@ -295,7 +258,6 @@ function showToast(message, isDelete = false) {
 
   const toast = document.createElement("div");
   toast.className = isDelete ? "toast toast-delete" : "toast";
-  
   toast.style.whiteSpace = "pre-line";
   toast.innerText = message;
 
