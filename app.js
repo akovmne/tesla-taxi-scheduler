@@ -20,32 +20,42 @@ let sortDirection = "asc";
 let fpInstances = [];
 let globalData = []; 
 
-// Bilježimo tačno vrijeme pokretanja aplikacije na uređaju (u milisekundama)
-const appOpenTimestamp = Date.now();
+// Flag koji sprječava da stari unosi aktiviraju notifikacije pri prvom otvaranju
+let isInitialLoad = true;
 
 window.onload = function() {
   initTimePickers();
   
-  // 1. Sinhronizacija u realnom vremenu na svim uređajima istovremeno
-  dbRef.on("value", function(snapshot) {
+  // 1. Prvo očitavanje baze i postavljanje tabele
+  dbRef.once("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
-    
     globalData = Object.keys(dataObj).map(key => ({
       id: key,
       ...dataObj[key]
     }));
-    
     renderTable();
-  }, function(error) {
-    console.error("Greška pri čitanju iz Firebase baze: ", error);
+    
+    // Kada se završi prvo očitavanje postojećih podataka, dozvoljavamo notifikacije
+    isInitialLoad = false;
   });
 
-  // 2. Slušaj kada neko DODA novi unos na bilo kom uređaju
+  // Sinhronizacija tabele u realnom vremenu za sve izmjene
+  dbRef.on("value", function(snapshot) {
+    const dataObj = snapshot.val() || {};
+    globalData = Object.keys(dataObj).map(key => ({
+      id: key,
+      ...dataObj[key]
+    }));
+    renderTable();
+  });
+
+  // 2. Slušaj kada bilo ko DODA novi unos (radi na svim uređajima istovremeno)
   dbRef.on("child_added", function(snapshot) {
+    // Ako je aplikacija tek otvorena i učitava stare podatke, preskoči toast
+    if (isInitialLoad) return;
+
     const newEntry = snapshot.val();
-    
-    // Sigurnosna provjera: ako unos nema createdAt (stari podatak), ignorisemo notifikaciju ali aplikacija nastavlja da radi
-    if (newEntry && newEntry.createdAt && newEntry.createdAt > appOpenTimestamp) {
+    if (newEntry) {
       const driver = newEntry.driver || '—';
       const vehicle = newEntry.vehicle || '—';
       const start = format24(newEntry.chargeStart);
@@ -55,10 +65,11 @@ window.onload = function() {
     }
   });
 
-  // 3. Slušaj kada neko OBRIŠE unos na bilo kom uređaju
+  // 3. Slušaj kada bilo ko OBRIŠE unos (radi na svim uređajima istovremeno)
   dbRef.on("child_removed", function(snapshot) {
+    if (isInitialLoad) return;
+
     const deletedEntry = snapshot.val();
-    
     if (deletedEntry) {
       const driver = deletedEntry.driver || '—';
       const vehicle = deletedEntry.vehicle || '—';
@@ -245,15 +256,13 @@ function addRow() {
     return;
   }
 
-  // Slanje u bazu sa vremenskim pečatom kreiranja
   dbRef.push({
     driver: driver.trim(),
     vehicle: vehicle.trim(),
     date,
     shift: shift.trim(),
     chargeStart,
-    chargeEnd,
-    createdAt: firebase.database.ServerValue.TIMESTAMP
+    chargeEnd
   }).catch(function(error) {
     alert("Greška pri upisu u bazu: " + error.message);
   });
@@ -279,7 +288,6 @@ function deleteRow(id) {
   }
 }
 
-// Prikaz prozorčića
 function showToast(message, isDelete = false) {
   const container = document.getElementById("toast-container");
   if (!container) return;
