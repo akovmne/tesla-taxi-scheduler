@@ -1,3 +1,4 @@
+<FILE file_path="/home/workdir/attachments/app.js">
 // Konfiguracija tvog Firebase projekta
 const firebaseConfig = {
   apiKey: "AIzaSyA_wcdHfOVXJkS4Sm6ihjhaeGyrRjH9r1w",
@@ -9,7 +10,7 @@ const firebaseConfig = {
   appId: "1:140620994358:web:9bd2cbeaee436edea00597"
 };
 
-// Inicijalizacija baze podataka preko punog Config-a
+// Inicijalizacija baze podataka
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -19,13 +20,13 @@ let currentSort = "";
 let sortDirection = "asc";
 let fpInstances = [];
 let globalData = []; 
+let isInitialLoad = true;
+let lastToastTime = 0;
 
 window.onload = function() {
   initTimePickers();
   
-  let isInitialLoad = true;
-  
-  // Sinhronizacija u realnom vremenu na svim uređajima istovremeno
+  // Sinhronizacija u realnom vremenu
   dbRef.on("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     
@@ -36,15 +37,15 @@ window.onload = function() {
     
     renderTable();
     
-    // Nakon što se prvi put učitaju svi postojeći podaci, isključujemo flag kako bismo dozvolili notifikacije
+    // Isključujemo initial load nakon prvog učitavanja podataka
     if (isInitialLoad) {
-      setTimeout(() => { isInitialLoad = false; }, 1000);
+      isInitialLoad = false;
     }
   }, function(error) {
     console.error("Greška pri čitanju iz Firebase baze: ", error);
   });
 
-  // Slušaj kada neko DODA novi unos na bilo kom uređaju
+  // Novi unos na bilo kom uređaju
   dbRef.on("child_added", function(snapshot) {
     if (!isInitialLoad) {
       const newEntry = snapshot.val();
@@ -52,7 +53,7 @@ window.onload = function() {
     }
   });
 
-  // Slušaj kada neko OBRIŠE unos na bilo kom uređaju
+  // Brisanje unosa na bilo kom uređaju
   dbRef.on("child_removed", function(snapshot) {
     if (!isInitialLoad) {
       const deletedEntry = snapshot.val();
@@ -246,6 +247,7 @@ function addRow() {
     alert("Greška pri upisu u bazu: " + error.message);
   });
 
+  // Očisti polja
   document.getElementById("driver").value = "";
   document.getElementById("vehicle").value = "";
   document.getElementById("date").value = "";
@@ -267,22 +269,14 @@ function deleteRow(id) {
   }
 }
 
-// Funkcija za dinamički prikaz obavještenja (Toast)
+// Toast notifikacije sa debouncing-om
 function showToast(message, isDelete = false) {
+  const now = Date.now();
+  if (now - lastToastTime < 800) return; // sprečava duplikate
+  lastToastTime = now;
+
   const container = document.getElementById("toast-container");
   if (!container) return;
 
   const toast = document.createElement("div");
-  toast.className = isDelete ? "toast toast-delete" : "toast";
-  toast.innerText = message;
-
-  container.appendChild(toast);
-
-  // Ukloni notifikaciju automatski nakon 4 sekunde
-  setTimeout(() => {
-    toast.style.animation = "fadeOut 0.5s ease-out forwards";
-    setTimeout(() => {
-      toast.remove();
-    }, 500);
-  }, 4000);
-}
+  toast.className = isDelete ? "toast toast-delete" : "
