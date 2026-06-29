@@ -89,7 +89,6 @@ input:focus {
   border-color: #38bdf8;
 }
 
-/* Fiks za Flatpickr tekstualna polja (da ostanu tamna sa plavim slovima) */
 .time-picker, 
 .date-picker, 
 .flatpickr-input,
@@ -149,7 +148,7 @@ th:hover { background: #0284c7; }
 td { background: #1e293b; }
 
 /* ==========================================================================
-   GOOGLE TAMNI MATERIAL STIL ZA POP-OUT KALENDAR DATUMA
+   GOOGLE TAMNI MATERIAL STIL ZA KALENDAR DATUMA
    ========================================================================== */
 .flatpickr-calendar {
   background: #202124 !important;
@@ -169,30 +168,26 @@ span.flatpickr-weekday { color: #9aa0a6 !important; font-weight: 500 !important;
 /* ==========================================================================
    ULTRA-VELIKI GOOGLE POP-OUT SAT (UVEĆAN ZA PREKO 150%)
    ========================================================================== */
-/* Ekstremno proširen prozorčić sata za lakše ciljanje na ekranu */
 .flatpickr-calendar.hasTime.noCalendar { 
   width: 320px !important; 
 }
 
-/* Povećana unutrašnja visina i komfor cijelog kućišta sata */
 .flatpickr-time { 
   background: #202124 !important; 
   border-radius: 12px !important; 
   max-height: 380px !important; 
   padding: 20px 0 !important;
-  height: 95px !important; /* Daje masivnost elementu */
+  height: 95px !important;
 }
 
-/* OGROMNI BROJEVI (Sati i minute uvećani na 2.5rem za maksimalnu vidljivost) */
 .flatpickr-time input { 
-  color: #38bdf8 !important; /* Promijenjeno u jarku svijetlo plavu radi boljeg fokusa */
+  color: #38bdf8 !important; 
   font-size: 2.5rem !important; 
-  font-weight: 700 !important; /* Ultra-bold */
+  font-weight: 700 !important; 
   background: transparent !important; 
   height: 80px !important;
 }
 
-/* Ogromna i uočljiva dvotačka (separator) */
 .flatpickr-time .flatpickr-time-separator { 
   color: #9aa0a6 !important; 
   font-size: 2.5rem !important;
@@ -201,26 +196,22 @@ span.flatpickr-weekday { color: #9aa0a6 !important; font-weight: 500 !important;
   line-height: 80px;
 }
 
-/* EKSTREMNO POVEĆANE STRELICE (Za lako klikanje prstom ili mišem bez greške) */
 .flatpickr-time .numInputWrapper span {
-  width: 40px !important;  /* Skoro duplo šire nego prije */
+  width: 40px !important;  
   padding: 10px !important;
   height: 40% !important;
 }
 
-/* Gornja strelica */
 .flatpickr-time .numInputWrapper span.arrowUp:after { 
   border-bottom-color: #1a73e8 !important; 
-  border-width: 0 9px 9px 9px !important; /* Masivnija strelica */
+  border-width: 0 9px 9px 9px !important; 
 }
 
-/* Donja strelica */
 .flatpickr-time .numInputWrapper span.arrowDown:after { 
   border-top-color: #1a73e8 !important; 
-  border-width: 9px 9px 0 9px !important; /* Masivnija strelica */
+  border-width: 9px 9px 0 9px !important; 
 }
 
-/* Hover efekat na velikim ciframa (posvjetljenje pozadine u toku izbora) */
 .flatpickr-time input:hover,
 .flatpickr-time .numInputWrapper:hover {
   background: #2d2f34 !important;
@@ -238,4 +229,180 @@ span.flatpickr-weekday { color: #9aa0a6 !important; font-weight: 500 !important;
   display: none;
   align-items: center; 
   justify-content: center;
-  opacity:
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.modal-overlay.modal-open {
+  opacity: 1;
+}
+
+.modal-card {
+  background: #202124;
+  border: 1px solid #3c4043;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 440px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  transform: scale(0.9);
+  transition: transform 0.2s ease;
+}
+
+.modal-overlay.modal-open .modal-card {
+  transform: scale(1);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.modal-icon { font-size: 1.5rem; }
+
+.modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #e8eaed;
+  font-weight: 500;
+}
+
+.modal-body {
+  color: #e8eaed;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  width: auto !important;
+  padding: 10px 28px !important;
+  background: #1a73e8 !important;
+  color: white !important;
+  font-weight: bold !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+}
+.modal-btn:hover { background: #1557b0 !important; }
+
+/* ==========================================================================
+   STIL ZA KARTICU ANALITIKE
+   ========================================================================== */
+.analytics-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+  margin-bottom: 25px;
+}
+
+.analytics-box {
+  background: #0f172a;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #1e293b;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.analytics-num {
+  display: block;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #38bdf8;
+  margin-bottom: 5px;
+}
+
+.analytics-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.analytics-details {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  border-top: 1px solid #334155;
+  padding-top: 20px;
+}
+
+@media (min-width: 768px) {
+  .analytics-details { grid-template-columns: 1fr 1fr; }
+}
+
+.analytics-details h3 {
+  font-size: 1rem;
+  color: #f1f5f9;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.analytics-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.analytics-list li {
+  background: #151f32;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  display: flex;
+  justify-content: space-between;
+  border-left: 3px solid #38bdf8;
+  align-items: center;
+}
+
+/* ==========================================================================
+   TOAST OBAVJEŠTENJA
+   ========================================================================== */
+#toast-container { 
+  position: fixed; 
+  bottom: 20px; 
+  right: 20px; 
+  z-index: 9999; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+}
+
+.toast { 
+  background: #1e293b; 
+  color: white; 
+  padding: 12px 20px; 
+  border-radius: 8px; 
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); 
+  border-left: 4px solid #38bdf8; 
+  font-size: 0.95rem; 
+  animation: slideIn 0.3s ease-out forwards; 
+  min-width: 250px; 
+  line-height: 1.4; 
+}
+
+.toast.toast-delete { border-left-color: #ef4444; }
+
+@keyframes slideIn { 
+  from { transform: translateX(100%); opacity: 0; } 
+  to { transform: translateX(0); opacity: 1; } 
+}
+
+@keyframes fadeOut { 
+  to { opacity: 0; transform: translateY(-10px); } 
+}
