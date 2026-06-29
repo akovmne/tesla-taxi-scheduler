@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Tesla Taxi Raspored</title>
   <link rel="stylesheet" href="./style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
 </head>
 <body>
 
@@ -25,11 +23,11 @@
     <div class="grid-inputs">
       <div>
         <label>Početak punjenja</label>
-        <input id="filterTimeFrom" class="time-picker" placeholder="Izaberi vrijeme">
+        <input id="filterTimeFrom" type="time" onchange="renderTable()">
       </div>
       <div>
         <label>Kraj punjenja</label>
-        <input id="filterTimeTo" class="time-picker" placeholder="Izaberi vrijeme">
+        <input id="filterTimeTo" type="time" onchange="renderTable()">
       </div>
     </div>
 
@@ -54,11 +52,11 @@
     <div class="grid-inputs">
       <div>
         <label>Početak punjenja</label>
-        <input id="chargeStart" class="time-picker" placeholder="Izaberi vrijeme">
+        <input id="chargeStart" type="time">
       </div>
       <div>
         <label>Kraj punjenja</label>
-        <input id="chargeEnd" class="time-picker" placeholder="Izaberi vrijeme">
+        <input id="chargeEnd" type="time">
       </div>
     </div>
 
@@ -91,8 +89,6 @@
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="./app.js"></script>
 
 </body>
