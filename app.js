@@ -95,8 +95,10 @@ function format24(time) {
 
 function toMinutes(t) {
   if (!t) return null;
-  const [h, m] = t.split(":").map(Number);
-  if (isNaN(h) || isNaN(m)) return null;
+  const match = t.match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return null;
+  const h = parseInt(match[1], 10);
+  const m = parseInt(match[2], 10);
   return h * 60 + m;
 }
 
@@ -287,11 +289,26 @@ function izracunajAnalitiku() {
     
     if (datumUnosa >= prije30Dana && datumUnosa <= danas) {
       ukupnoU30Dana++;
+      
+      // Brojanje vozila
       if (item.vehicle && item.vehicle !== "—") {
         vozilaBrojac[item.vehicle] = (vozilaBrojac[item.vehicle] || 0) + 1;
       }
+      
+      // Brojanje rezervacija i SATI po vozaču
       if (item.driver && item.driver !== "—") {
-        vozaciBrojac[item.driver] = (vozaciBrojac[item.driver] || 0) + 1;
+        const vIme = item.driver.trim();
+        if (!vozaciBrojac[vIme]) {
+          vozaciBrojac[vIme] = { rezervacije: 0, minuti: 0 };
+        }
+        vozaciBrojac[vIme].rezervacije += 1;
+
+        // Izračunavanje trajanja punjenja u minutima
+        const mStart = toMinutes(item.chargeStart);
+        const mEnd = toMinutes(item.chargeEnd);
+        if (mStart !== null && mEnd !== null && mEnd > mStart) {
+          vozaciBrojac[vIme].minuti += (mEnd - mStart);
+        }
       }
     }
   });
@@ -303,9 +320,9 @@ function izracunajAnalitiku() {
   }
 
   let najVozac = "—";
-  let vozaciSortirano = Object.entries(vozaciBrojac).sort((a, b) => b[1] - a[1]);
+  let vozaciSortirano = Object.entries(vozaciBrojac).sort((a, b) => b[1].rezervacije - a[1].rezervacije);
   if (vozaciSortirano.length > 0) {
-    najVozac = `${vozaciSortirano[0][0]} (${vozaciSortirano[0][1]}x)`;
+    najVozac = `${vozaciSortirano[0][0]} (${vozaciSortirano[0][1].rezervacije}x)`;
   }
 
   document.getElementById("statTotal").innerText = ukupnoU30Dana;
@@ -320,8 +337,9 @@ function izracunajAnalitiku() {
 
   const listaVozacaEl = document.getElementById("statsDriverList");
   listaVozacaEl.innerHTML = vozaciSortirano.length === 0 ? "<li>Nema podataka</li>" : "";
-  vozaciSortirano.slice(0, 5).forEach(([vozac, broj]) => {
-    listaVozacaEl.innerHTML += `<li><span>👤 ${vozac}</span> <span><strong>${broj}x</strong></span></li>`;
+  vozaciSortirano.slice(0, 5).forEach(([vozac, podaci]) => {
+    const sati = (podaci.minuti / 60).toFixed(1); // Pretvaranje u sate sa jednom decimalom
+    listaVozacaEl.innerHTML += `<li><span>👤 ${vozac}</span> <span><strong>${podaci.rezervacije}x / ${sati}h punjenja</strong></span></li>`;
   });
 }
 
