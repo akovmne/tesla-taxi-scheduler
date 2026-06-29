@@ -26,7 +26,7 @@ let lastToastTime = 0;
 window.onload = function() {
   initTimePickers();
   
-  // Sinhronizacija u realnom vremenu
+  // Real-time sync
   dbRef.on("value", function(snapshot) {
     const dataObj = snapshot.val() || {};
     
@@ -52,7 +52,7 @@ window.onload = function() {
     }
   });
 
-  // Brisanje unosa
+  // Brisanje
   dbRef.on("child_removed", function(snapshot) {
     if (!isInitialLoad) {
       const entry = snapshot.val();
@@ -62,7 +62,7 @@ window.onload = function() {
 };
 
 function initTimePickers() {
-  // Destroy old instances
+  // Destroy previous instances
   fpInstances.forEach(instance => {
     if (instance && typeof instance.destroy === "function") instance.destroy();
   });
@@ -75,9 +75,10 @@ function initTimePickers() {
     time_24hr: true,
     minuteIncrement: 5,
     disableMobile: true,
-    onChange: function(selectedDates, dateStr) {
-      // Only re-render table for filter time pickers
-      if (this.element.id.includes("filter")) {
+    onChange: function(selectedDates, dateStr, instance) {
+      // Only trigger table re-render for FILTER time pickers
+      const id = this.element ? this.element.id : "";
+      if (id.includes("filter")) {
         renderTable();
       }
     }
@@ -203,4 +204,101 @@ function renderTable() {
         <td>${clean(item.vehicle)}</td>
         <td>${clean(item.date)}</td>
         <td>${clean(item.shift)}</td>
-        <td>${format24(item
+        <td>${format24(item.chargeStart)}</td>
+        <td>${format24(item.chargeEnd)}</td>
+        <td>
+          <button class="delete-btn" onclick="deleteRow('${item.id}')" style="padding: 4px 8px; margin: 0;">X</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+function resetFilter() {
+  if (document.getElementById("filterDriver")) document.getElementById("filterDriver").value = "";
+  if (document.getElementById("filterVehicle")) document.getElementById("filterVehicle").value = "";
+  if (document.getElementById("filterShift")) document.getElementById("filterShift").value = "";
+  
+  if (document.getElementById("filterTimeFrom") && document.getElementById("filterTimeFrom")._flatpickr) {
+    document.getElementById("filterTimeFrom")._flatpickr.clear();
+  }
+  if (document.getElementById("filterTimeTo") && document.getElementById("filterTimeTo")._flatpickr) {
+    document.getElementById("filterTimeTo")._flatpickr.clear();
+  }
+
+  renderTable();
+}
+
+function addRow() {
+  const driver = document.getElementById("driver").value;
+  const vehicle = document.getElementById("vehicle").value;
+  const date = document.getElementById("date").value;
+  const shift = document.getElementById("shift").value;
+  const chargeStart = document.getElementById("chargeStart").value;
+  const chargeEnd = document.getElementById("chargeEnd").value;
+
+  if (!driver.trim() || !vehicle.trim() || !date.trim()) {
+    alert("Unesite vozača, vozilo i datum");
+    return;
+  }
+
+  dbRef.push({
+    driver: driver.trim(),
+    vehicle: vehicle.trim(),
+    date,
+    shift: shift.trim(),
+    chargeStart,
+    chargeEnd
+  }).catch(function(error) {
+    alert("Greška pri upisu u bazu: " + error.message);
+  });
+
+  // Clear form
+  document.getElementById("driver").value = "";
+  document.getElementById("vehicle").value = "";
+  document.getElementById("date").value = "";
+  document.getElementById("shift").value = "";
+  
+  if (document.getElementById("chargeStart") && document.getElementById("chargeStart")._flatpickr) {
+    document.getElementById("chargeStart")._flatpickr.clear();
+  }
+  if (document.getElementById("chargeEnd") && document.getElementById("chargeEnd")._flatpickr) {
+    document.getElementById("chargeEnd")._flatpickr.clear();
+  }
+}
+
+function deleteRow(id) {
+  if (confirm("Da li ste sigurni da želite da obrišete ovaj unos?")) {
+    firebase.database().ref("raspored/" + id).remove().catch(function(error) {
+      alert("Greška pri brisanju: " + error.message);
+    });
+  }
+}
+
+// Rich Toast notification
+function showToast(entry, type) {
+  const now = Date.now();
+  if (now - lastToastTime < 800) return;
+  lastToastTime = now;
+
+  const container = document.getElementById("toast-container");
+  if (!container) return;
+
+  const timeInfo = `${format24(entry.chargeStart)} → ${format24(entry.chargeEnd)}`;
+  let message = type === "add" 
+    ? `➕ Dodat raspored\n${entry.driver || '—'} | ${entry.vehicle || '—'}\n${timeInfo}`
+    : `❌ Obrisan raspored\n${entry.driver || '—'} | ${entry.vehicle || '—'}\n${timeInfo}`;
+
+  const toast = document.createElement("div");
+  toast.className = type === "delete" ? "toast toast-delete" : "toast";
+  toast.style.whiteSpace = "pre-line";
+  toast.innerText = message;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.animation = "fadeOut 0.5s ease-out forwards";
+    setTimeout(() => toast.remove(), 500);
+  }, 4500);
+}
+</FILE>
