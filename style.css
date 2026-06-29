@@ -1,3 +1,6 @@
+/* ==========================================================================
+   OSNOVNI STIL I STRUKTURA STRANICE
+   ========================================================================== */
 body {
   font-family: 'Roboto', Arial, sans-serif;
   background: #0f172a;
@@ -66,6 +69,9 @@ label {
   }
 }
 
+/* ==========================================================================
+   STIL INPUT POLJA I STROGO UKLANJANJE BIJELE POZADINE
+   ========================================================================== */
 input {
   width: 100%;
   padding: 12px;
@@ -83,7 +89,7 @@ input:focus {
   border-color: #38bdf8;
 }
 
-/* TAČAN IZGLED SATOVA I DATUMA BEZ BIJELOG PROZORA */
+/* Kompletan fiks za Flatpickr polja i pretraživače na PC-ju i mobilnim uređajima */
 .time-picker, 
 .date-picker, 
 .flatpickr-input,
@@ -101,6 +107,9 @@ input:read-only {
   -webkit-text-fill-color: #38bdf8 !important;
 }
 
+/* ==========================================================================
+   DUGMAD I RESPONSIVE TABELA
+   ========================================================================== */
 .btn-group {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -139,7 +148,9 @@ th { background: #0ea5e9; color: black; cursor: pointer; user-select: none; font
 th:hover { background: #0284c7; }
 td { background: #1e293b; }
 
-/* GOOGLE TAMNI MATERIAL STIL ZA KALENDARE */
+/* ==========================================================================
+   GOOGLE TAMNI MATERIAL STIL ZA POP-OUT KALENDAR DATUMA
+   ========================================================================== */
 .flatpickr-calendar {
   background: #202124 !important;
   border: 1px solid #3c4043 !important;
@@ -155,90 +166,16 @@ span.flatpickr-weekday { color: #9aa0a6 !important; font-weight: 500 !important;
 .flatpickr-day.selected, .flatpickr-day.selected:hover { background: #1a73e8 !important; color: white !important; }
 .flatpickr-day.today { border-color: #1a73e8 !important; color: #8ab4f8 !important; }
 
-/* Google Sat Pop-out lista */
-.flatpickr-calendar.hasTime.noCalendar { width: 140px !important; }
-.flatpickr-time { background: #202124 !important; border-radius: 8px !important; max-height: 200px !important; }
-.flatpickr-time input { color: #e8eaed !important; font-size: 1.2rem !important; font-weight: 500 !important; background: transparent !important; }
-.flatpickr-time .flatpickr-time-separator { color: #9aa0a6 !important; }
-
-/* MODERAN GOOGLE DIJALOG (MODAL) */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  z-index: 10000;
-  display: none;
-  align-items: center; 
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s ease;
+/* ==========================================================================
+   POVEĆAN I UNAPRIJEĐEN GOOGLE POP-OUT SAT
+   ========================================================================== */
+/* Povećana širina pop-out prozora sa 140px na 220px */
+.flatpickr-calendar.hasTime.noCalendar { 
+  width: 220px !important; 
 }
 
-.modal-overlay.modal-open {
-  opacity: 1;
-}
-
-.modal-card {
-  background: #202124;
-  border: 1px solid #3c4043;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 440px;
-  padding: 24px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-  transform: scale(0.9);
-  transition: transform 0.2s ease;
-}
-
-.modal-overlay.modal-open .modal-card {
-  transform: scale(1);
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.modal-icon {
-  font-size: 1.5rem;
-}
-
-.modal-title {
-  margin: 0;
-  font-size: 1.25rem;
-  color: #e8eaed;
-  font-weight: 500;
-}
-
-.modal-body {
-  color: #e8eaed;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  margin-bottom: 24px;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.modal-btn {
-  width: auto !important;
-  padding: 10px 28px !important;
-  background: #1a73e8 !important;
-  color: white !important;
-  font-weight: bold !important;
-  border-radius: 4px !important;
-  cursor: pointer !important;
-}
-.modal-btn:hover { background: #1557b0 !important; }
-
-/* TOAST NOTIFIKACIJE */
-#toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-.toast { background: #1e293b; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); border-left: 4px solid #38bdf8; font-size: 0.95rem; animation: slideIn 0.3s ease-out forwards; min-width: 250px; line-height: 1.4; }
-.toast.toast-delete { border-left-color: #ef4444; }
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-@keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
-.modal-btn:hover { background: #1557b0 !important; }
+.flatpickr-time { 
+  background: #202124 !important; 
+  border-radius: 8px !important; 
+  max-height: 280px !important; 
+  padding:
