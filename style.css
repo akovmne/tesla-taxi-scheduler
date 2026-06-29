@@ -27,7 +27,6 @@ h1 {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Kontejner koji drži tabelu i omogućava čist horizontalni skrol */
 .table-card {
   padding: 15px;
 }
@@ -35,7 +34,7 @@ h1 {
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch; /* Tečan skrol za iOS Safari */
+  -webkit-overflow-scrolling: touch;
 }
 
 h2 {
@@ -138,10 +137,9 @@ button:hover {
   background: #dc2626;
 }
 
-/* FIKSIRANI PC IZGLED TABELE ZA SVE URREĐAJE */
 table {
   width: 100%;
-  min-width: 800px; /* Force-uje tabelu da na telefonu zadrži punu širinu i raspored kao na PC-ju */
+  min-width: 800px;
   border-collapse: collapse;
   margin-top: 10px;
 }
@@ -150,7 +148,7 @@ th, td {
   border: 1px solid #334155;
   padding: 12px 14px;
   text-align: center;
-  white-space: nowrap; /* Strogo zabranjuje prelamanje teksta u novi red */
+  white-space: nowrap;
 }
 
 th {
@@ -184,7 +182,6 @@ td {
   border-top-color: #38bdf8 !important;
 }
 
-/* Kontejner za toast notifikacije */
 #toast-container {
   position: fixed;
   bottom: 20px;
@@ -205,6 +202,7 @@ td {
   font-size: 0.95rem;
   animation: slideIn 0.3s ease-out forwards;
   min-width: 250px;
+  line-height: 1.4;
 }
 
 .toast.toast-delete {
