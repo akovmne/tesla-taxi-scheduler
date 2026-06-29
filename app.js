@@ -44,7 +44,7 @@ window.onload = function() {
   dbRef.on("child_added", function(snapshot) {
     const newEntry = snapshot.val();
     
-    // Notifikacija se prikazuje samo ako je unos kreiran NAKON što je korisnik otvorio aplikaciju
+    // Notifikacija se prikazuje samo ako je unos kreiran nakon što smo otvorili stranicu
     if (newEntry && newEntry.createdAt && newEntry.createdAt > appOpenTimestamp) {
       const driver = newEntry.driver || '—';
       const vehicle = newEntry.vehicle || '—';
@@ -70,10 +70,12 @@ window.onload = function() {
   });
 };
 
+// Inicijalizacija svih pop-up satova (za filtere i za unos)
 function initTimePickers() {
   fpInstances.forEach(instance => instance.destroy());
   fpInstances = [];
 
+  // flatpickr pronalazi sve elemente koji imaju klasu "time-picker"
   const instances = flatpickr(".time-picker", {
     enableTime: true,
     noCalendar: true,
@@ -82,7 +84,7 @@ function initTimePickers() {
     minuteIncrement: 5, 
     disableMobile: "true",
     onChange: function() {
-      renderTable();
+      renderTable(); // Automatski filtrira tabelu čim se izabere sat u filteru
     }
   });
   
@@ -244,7 +246,7 @@ function addRow() {
     return;
   }
 
-  // Dodajemo serverski tajmstep kako bi drugi uređaji znali kada je tačno napravljen unos
+  // Slanje u bazu sa vremenskim pečatom kreiranja
   dbRef.push({
     driver: driver.trim(),
     vehicle: vehicle.trim(),
@@ -286,7 +288,7 @@ function showToast(message, isDelete = false) {
   const toast = document.createElement("div");
   toast.className = isDelete ? "toast toast-delete" : "toast";
   
-  // white-space pre-line omogućava prelamanje redova unutar toasta (\n)
+  // white-space pre-line omogućava \n prelamanje teksta u nove redove unutar prozorčića
   toast.style.whiteSpace = "pre-line";
   toast.innerText = message;
 
