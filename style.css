@@ -1,202 +1,109 @@
-body {
-  font-family: 'Roboto', Arial, sans-serif;
-  background: #0f172a;
-  color: white;
-  margin: 0;
-  padding: 10px;
-}
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tesla Taxi Raspored</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<body>
 
-.container {
-  max-width: 1100px;
-  margin: auto;
-  padding: 10px;
-}
+<div class="container">
 
-h1 {
-  text-align: center;
-  color: #38bdf8;
-  font-size: 1.8rem;
-  margin-bottom: 20px;
-}
+  <h1>🚖 Tesla Taxi – Raspored na punjačima</h1>
 
-.card {
-  background: #1e293b;
-  padding: 20px;
-  margin-top: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
+  <div class="card">
+    <h2>🔎 Filter</h2>
+    <div class="grid-inputs">
+      <input id="filterDriver" placeholder="Vozač" oninput="renderTable()">
+      <input id="filterVehicle" placeholder="Vozilo (T-01)" oninput="renderTable()">
+      <input id="filterShift" placeholder="Smjena (npr. 1)" oninput="renderTable()">
+    </div>
+    
+    <div class="grid-inputs">
+      <div>
+        <label>Početak punjenja</label>
+        <input id="filterTimeFrom" class="time-picker" placeholder="Izaberi vrijeme" readonly>
+      </div>
+      <div>
+        <label>Kraj punjenja</label>
+        <input id="filterTimeTo" class="time-picker" placeholder="Izaberi vrijeme" readonly>
+      </div>
+    </div>
 
-.table-card {
-  padding: 15px;
-}
+    <div class="btn-group">
+      <button onclick="renderTable()">🔍 Primijeni filter</button>
+      <button onclick="resetFilter()" class="btn-secondary">♻️ Reset</button>
+    </div>
+  </div>
 
-.table-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
+  <div class="card">
+    <h2>➕ Dodaj unos</h2>
+    <div class="grid-inputs">
+      <input id="driver" placeholder="Ime vozača">
+      <input id="vehicle" placeholder="Vozilo (T-01)">
+    </div>
+    
+    <div class="grid-inputs">
+      <div>
+        <label>Datum rasporeda</label>
+        <input id="date" class="date-picker" placeholder="Izaberi datum" readonly>
+      </div>
+      <div>
+        <label>Smjena</label>
+        <input id="shift" placeholder="Smjena (1, 2 ili 07:00 - 15:00)">
+      </div>
+    </div>
 
-h2 {
-  font-size: 1.3rem;
-  margin-top: 0;
-  color: #f1f5f9;
-  border-bottom: 1px solid #334155;
-  padding-bottom: 8px;
-}
+    <div class="grid-inputs">
+      <div>
+        <label>Početak punjenja</label>
+        <input id="chargeStart" class="time-picker" placeholder="Izaberi vrijeme" readonly>
+      </div>
+      <div>
+        <label>Kraj punjenja</label>
+        <input id="chargeEnd" class="time-picker" placeholder="Izaberi vrijeme" readonly>
+      </div>
+    </div>
 
-label {
-  display: block;
-  font-size: 0.85rem;
-  color: #94a3b8;
-  margin-top: 8px;
-  margin-bottom: 2px;
-}
+    <button onclick="addRow()" class="btn-success">Dodaj</button>
+  </div>
 
-.grid-inputs {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-  margin-bottom: 10px;
-}
+  <div class="card table-card">
+    <div class="table-wrapper">
+      <table class="responsive-table">
+        <thead>
+          <tr>
+            <th onclick="sortTable('driver')">Vozač ↕</th>
+            <th onclick="sortTable('vehicle')">Vozilo ↕</th>
+            <th onclick="sortTable('date')">Datum ↕</th>
+            <th onclick="sortTable('shift')">Smjena ↕</th>
+            <th onclick="sortTable('chargeStart')">Početak ↕</th>
+            <th onclick="sortTable('chargeEnd')">Kraj ↕</th>
+            <th>Akcija</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-@media (min-width: 600px) {
-  .grid-inputs {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-}
+</div>
 
-input {
-  width: 100%;
-  padding: 12px;
-  margin: 4px 0;
-  border-radius: 6px;
-  border: 1px solid #334155;
-  background: #0f172a;
-  color: white;
-  box-sizing: border-box;
-  font-size: 1rem;
-}
+<div id="toast-container"></div>
 
-input:focus {
-  outline: none;
-  border-color: #38bdf8;
-}
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/sr.js"></script>
+<script src="./app.js"></script>
 
-/* Osiguravamo reagovanje i klik na čitavo polje kalendara */
-.time-picker, .date-picker, .flatpickr-input {
-  cursor: pointer !important;
-  color: #38bdf8 !important;
-  font-weight: 500;
-  text-align: center;
-  pointer-events: auto !important;
-}
-
-.btn-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-button {
-  width: 100%;
-  padding: 12px;
-  background: #38bdf8;
-  color: #0f172a;
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-button:hover { background: #0ea5e9; }
-.btn-secondary { background: #475569; color: white; }
-.btn-secondary:hover { background: #334155; }
-.btn-success { background: #10b981; color: white; margin-top: 15px; }
-.btn-success:hover { background: #059669; }
-
-.delete-btn {
-  background: #ef4444; color: white; padding: 6px 12px;
-  font-size: 0.9rem; width: auto; border-radius: 4px; display: inline-block;
-}
-.delete-btn:hover { background: #dc2626; }
-
-table { width: 100%; min-width: 800px; border-collapse: collapse; margin-top: 10px; }
-th, td { border: 1px solid #334155; padding: 12px 14px; text-align: center; white-space: nowrap; }
-th { background: #0ea5e9; color: black; cursor: pointer; user-select: none; font-weight: bold; }
-th:hover { background: #0284c7; }
-td { background: #1e293b; }
-
-/* ==========================================================================
-   GOOGLE TAMNI MATERIAL STIL ZA POP-OUT KALENDARE I SATOVE
-   ========================================================================== */
-
-.flatpickr-calendar {
-  background: #202124 !important;
-  border: 1px solid #3c4043 !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
-  font-family: 'Roboto', sans-serif !important;
-}
-
-.flatpickr-months .flatpickr-month {
-  background: #202124 !important;
-  color: #e8eaed !important;
-}
-.flatpickr-current-month .flatpickr-monthDropdown-months {
-  font-weight: 500 !important;
-}
-.flatpickr-months .flatpickr-prev-month, 
-.flatpickr-months .flatpickr-next-month {
-  fill: #1a73e8 !important;
-}
-span.flatpickr-weekday {
-  color: #9aa0a6 !important;
-  font-weight: 500 !important;
-}
-.flatpickr-day {
-  color: #e8eaed !important;
-  border-radius: 50% !important;
-}
-.flatpickr-day:hover {
-  background: #3c4043 !important;
-}
-.flatpickr-day.selected, .flatpickr-day.selected:hover {
-  background: #1a73e8 !important;
-  color: white !important;
-  border-color: #1a73e8 !important;
-}
-.flatpickr-day.today {
-  border-color: #1a73e8 !important;
-  color: #8ab4f8 !important;
-}
-
-/* Google Time Dropdown */
-.flatpickr-calendar.hasTime.noCalendar {
-  width: 140px !important;
-}
-.flatpickr-time {
-  background: #202124 !important;
-  border-radius: 8px !important;
-  max-height: 200px !important;
-}
-.flatpickr-time input {
-  color: #e8eaed !important;
-  font-size: 1.2rem !important;
-  font-weight: 500 !important;
-}
-.flatpickr-time .flatpickr-time-separator {
-  color: #9aa0a6 !important;
-}
-.flatpickr-time .numInputWrapper span.arrowUp:after { border-bottom-color: #1a73e8 !important; }
-.flatpickr-time .numInputWrapper span.arrowDown:after { border-top-color: #1a73e8 !important; }
-
-/* TOAST OBAVJEŠTENJA */
-#toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-.toast { background: #1e293b; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); border-left: 4px solid #38bdf8; font-size: 0.95rem; animation: slideIn 0.3s ease-out forwards; min-width: 250px; line-height: 1.4; }
-.toast.toast-delete { border-left-color: #ef4444; }
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-@keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
+</body>
+</html>city: 0; transform: translateY(-10px); } }
