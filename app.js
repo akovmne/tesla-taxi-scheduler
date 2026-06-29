@@ -74,7 +74,7 @@ function initGooglePickers() {
     allowInput: false
   });
 
-  // Google Sat za vreme
+  // Google Sat za vrijeme
   const timePickers = flatpickr(".time-picker", {
     enableTime: true,
     noCalendar: true,
@@ -110,13 +110,16 @@ function toMinutes(t) {
 }
 
 function getFilters() {
-  return {
-    driver: document.getElementById("filterDriver") ? document.getElementById("filterDriver").value.toLowerCase().trim() : "",
-    vehicle: document.getElementById("filterVehicle") ? document.getElementById("filterVehicle").value.toLowerCase().trim() : "",
-    shift: document.getElementById("filterShift") ? document.getElementById("filterShift").value.toLowerCase().trim() : "",
-    from: document.getElementById("filterTimeFrom") ? document.getElementById("filterTimeFrom").value : "",
-    to: document.getElementById("filterTimeTo") ? document.getElementById("filterTimeTo").value : ""
-  };
+  const fDriver = document.getElementById("filterDriver") ? document.getElementById("filterDriver").value.toLowerCase().trim() : "";
+  const fVehicle = document.getElementById("filterVehicle") ? document.getElementById("filterVehicle").value.toLowerCase().trim() : "";
+  const fShift = document.getElementById("filterShift") ? document.getElementById("filterShift").value.toLowerCase().trim() : "";
+  
+  const fromEl = document.getElementById("filterTimeFrom");
+  const toEl = document.getElementById("filterTimeTo");
+  const fFrom = (fromEl && fromEl._flatpickr) ? fromEl._flatpickr.input.value : "";
+  const fTo = (toEl && toEl._flatpickr) ? toEl._flatpickr.input.value : "";
+
+  return { driver: fDriver, vehicle: fVehicle, shift: fShift, from: fFrom, to: fTo };
 }
 
 function sortTable(column) {
@@ -215,29 +218,34 @@ function resetFilter() {
 function addRow() {
   const driver = document.getElementById("driver").value;
   const vehicle = document.getElementById("vehicle").value;
-  
-  // Flatpickr kreira alternativno skriveno polje, zato hvatamo vrednost bezbedno ovako:
-  const dateEl = document.getElementById("date");
-  const date = dateEl ? dateEl.value : "";
-  
   const shift = document.getElementById("shift").value;
-  const chargeStart = document.getElementById("chargeStart").value;
-  const chargeEnd = document.getElementById("chargeEnd").value;
+  
+  // BEZBJEDNO PREUZIMANJE VRIJEDNOSTI IZ FLATPICKR INSTANCI
+  const dateEl = document.getElementById("date");
+  const cStartEl = document.getElementById("chargeStart");
+  const cEndEl = document.getElementById("chargeEnd");
 
+  const date = (dateEl && dateEl._flatpickr) ? dateEl._flatpickr.input.value : "";
+  const chargeStart = (cStartEl && cStartEl._flatpickr) ? cStartEl._flatpickr.input.value : "";
+  const chargeEnd = (cEndEl && cEndEl._flatpickr) ? cEndEl._flatpickr.input.value : "";
+
+  // 1. Validacija obaveznih polja
   if (!driver.trim() || !vehicle.trim() || !date.trim() || !chargeStart.trim()) {
     alert("Unesite vozača, vozilo, datum i početak punjenja.");
     return;
   }
 
+  // 2. STROGA PROVJERA DUPLIKATA (Sada radi jer su datumi i vremena tačno izvučeni)
   const istovremeniUnosi = globalData.filter(item => {
     return item.date === date && item.chargeStart === chargeStart;
   });
 
   if (istovremeniUnosi.length >= 2) {
-    alert(`⚠️ Unos odbijen!\n\nNa dan ${formatDatum(date)} u ${chargeStart} h već su zakazana dva vozila na punjaču. Nije moguće dodati treće vozilo u istom terminu.`);
-    return;
+    alert(`⚠️ UNOS ODBIJEN!\n\nNa dan ${formatDatum(date)} u ${chargeStart} h već su zakazana maksimalna dva vozila na punjaču.\n\nNije moguće dodati treće vozilo u istom terminu.`);
+    return; // Potpuno blokira dodavanje i slanje na Firebase
   }
 
+  // 3. Upis u Firebase
   dbRef.push({
     driver: driver.trim(),
     vehicle: vehicle.trim(),
@@ -249,13 +257,15 @@ function addRow() {
     alert("Greška pri upisu u bazu: " + error.message);
   });
 
+  // Čišćenje standardnih polja
   document.getElementById("driver").value = "";
   document.getElementById("vehicle").value = "";
   document.getElementById("shift").value = "";
   
-  document.querySelectorAll(".card:nth-of-type(2) input.time-picker, .card:nth-of-type(2) input.date-picker").forEach(el => {
-    if(el._flatpickr) el._flatpickr.clear();
-  });
+  // Čišćenje kalendara i satova
+  if(dateEl && dateEl._flatpickr) dateEl._flatpickr.clear();
+  if(cStartEl && cStartEl._flatpickr) cStartEl._flatpickr.clear();
+  if(cEndEl && cEndEl._flatpickr) cEndEl._flatpickr.clear();
 }
 
 function formatDatum(dateStr) {
