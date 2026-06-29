@@ -62,7 +62,10 @@ window.onload = function() {
 };
 
 function initTimePickers() {
-  fpInstances.forEach(instance => instance.destroy());
+  // Destroy old instances
+  fpInstances.forEach(instance => {
+    if (instance && typeof instance.destroy === "function") instance.destroy();
+  });
   fpInstances = [];
 
   const instances = flatpickr(".time-picker", {
@@ -70,10 +73,13 @@ function initTimePickers() {
     noCalendar: true,
     dateFormat: "H:i",
     time_24hr: true,
-    minuteIncrement: 5, 
-    disableMobile: "true",
-    onChange: function() {
-      renderTable();
+    minuteIncrement: 5,
+    disableMobile: true,
+    onChange: function(selectedDates, dateStr) {
+      // Only re-render table for filter time pickers
+      if (this.element.id.includes("filter")) {
+        renderTable();
+      }
     }
   });
   
@@ -137,3 +143,64 @@ function compareValues(a, b, isDate = false) {
   }
 
   a = String(a).toLowerCase();
+  b = String(b).toLowerCase();
+
+  if (a < b) return sortDirection === "asc" ? -1 : 1;
+  if (a > b) return sortDirection === "asc" ? 1 : -1;
+  return 0;
+}
+
+function renderTable() {
+  const body = document.getElementById("tableBody");
+  if (!body) return;
+
+  const f = getFilters();
+  body.innerHTML = "";
+
+  const fromMin = toMinutes(f.from);
+  const toMin = toMinutes(f.to);
+
+  let filtered = globalData.filter(item => {
+    const matchDriver = String(item.driver || "").toLowerCase().includes(f.driver);
+    const matchVehicle = String(item.vehicle || "").toLowerCase().includes(f.vehicle);
+    const matchShift = String(item.shift || "").toLowerCase().includes(f.shift);
+
+    const times = [
+      toMinutes(item.chargeStart),
+      toMinutes(item.chargeEnd)
+    ].filter(t => t !== null);
+
+    let matchTime = true;
+
+    if (fromMin !== null) {
+      matchTime = times.some(t => t >= fromMin);
+    }
+    if (toMin !== null) {
+      matchTime = matchTime && times.some(t => t <= toMin);
+    }
+
+    return matchDriver && matchVehicle && matchShift && matchTime;
+  });
+
+  if (currentSort) {
+    filtered.sort((a, b) => {
+      if (currentSort === "date") {
+        return compareValues(a.date, b.date, true);
+      }
+      return compareValues(a[currentSort], b[currentSort], false);
+    });
+  }
+
+  if (filtered.length === 0) {
+    body.innerHTML = `<tr><td colspan="7" style="text-align:center; background:#1e293b;">Nema rezultata</td></tr>`;
+    return;
+  }
+
+  filtered.forEach(item => {
+    body.innerHTML += `
+      <tr>
+        <td>${clean(item.driver)}</td>
+        <td>${clean(item.vehicle)}</td>
+        <td>${clean(item.date)}</td>
+        <td>${clean(item.shift)}</td>
+        <td>${format24(item
