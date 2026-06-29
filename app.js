@@ -51,7 +51,6 @@ window.onload = function() {
 
   // 2. Slušaj kada bilo ko DODA novi unos (radi na svim uređajima istovremeno)
   dbRef.on("child_added", function(snapshot) {
-    // Ako je aplikacija tek otvorena i učitava stare podatke, preskoči toast
     if (isInitialLoad) return;
 
     const newEntry = snapshot.val();
@@ -81,7 +80,7 @@ window.onload = function() {
   });
 };
 
-// Inicijalizacija pop-up satova za sva 4 polja (2 u filteru, 2 u unosu)
+// Inicijalizacija unapređenih pop-up satova lakih za klikanje i skrolovanje
 function initTimePickers() {
   fpInstances.forEach(instance => instance.destroy());
   fpInstances = [];
@@ -92,7 +91,9 @@ function initTimePickers() {
     dateFormat: "H:i",
     time_24hr: true,
     minuteIncrement: 5, 
-    disableMobile: "true",
+    disableMobile: "true", // Koristi Flatpickr prilagođen izgled i na telefonima umjesto nativnog sistema
+    wheelInput: true,      // Omogućava skrolovanje točkićem miša na PC-ju za promenu brojeva
+    static: false,
     onChange: function() {
       renderTable(); // Automatski filtrira tabelu čim se izabere sat u filteru
     }
