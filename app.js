@@ -17,7 +17,6 @@ const dbRef = firebase.database().ref("raspored");
 let currentSort = "";
 let sortDirection = "asc";
 let globalData = []; 
-let pickerInstances = [];
 
 let isInitialLoad = true;
 
@@ -61,11 +60,8 @@ window.onload = function() {
 };
 
 function initGooglePickers() {
-  pickerInstances.forEach(ins => ins.destroy());
-  pickerInstances = [];
-
   // Google Kalendar za datum
-  const datePickers = flatpickr(".date-picker", {
+  flatpickr(".date-picker", {
     locale: "sr",
     dateFormat: "Y-m-d",
     altInput: true,
@@ -75,7 +71,7 @@ function initGooglePickers() {
   });
 
   // Google Sat za vrijeme
-  const timePickers = flatpickr(".time-picker", {
+  flatpickr(".time-picker", {
     enableTime: true,
     noCalendar: true,
     dateFormat: "H:i",
@@ -87,8 +83,6 @@ function initGooglePickers() {
       renderTable();
     }
   });
-
-  pickerInstances = [].concat(datePickers, timePickers);
 }
 
 function clean(v) {
@@ -116,8 +110,9 @@ function getFilters() {
   
   const fromEl = document.getElementById("filterTimeFrom");
   const toEl = document.getElementById("filterTimeTo");
-  const fFrom = (fromEl && fromEl._flatpickr) ? fromEl._flatpickr.input.value : "";
-  const fTo = (toEl && toEl._flatpickr) ? toEl._flatpickr.input.value : "";
+  
+  const fFrom = (fromEl && fromEl.value) ? fromEl.value : "";
+  const fTo = (toEl && toEl.value) ? toEl.value : "";
 
   return { driver: fDriver, vehicle: fVehicle, shift: fShift, from: fFrom, to: fTo };
 }
@@ -220,29 +215,32 @@ function addRow() {
   const vehicle = document.getElementById("vehicle").value;
   const shift = document.getElementById("shift").value;
   
-  // BEZBJEDNO PREUZIMANJE VRIJEDNOSTI IZ FLATPICKR INSTANCI
   const dateEl = document.getElementById("date");
   const cStartEl = document.getElementById("chargeStart");
   const cEndEl = document.getElementById("chargeEnd");
 
-  const date = (dateEl && dateEl._flatpickr) ? dateEl._flatpickr.input.value : "";
-  const chargeStart = (cStartEl && cStartEl._flatpickr) ? cStartEl._flatpickr.input.value : "";
-  const chargeEnd = (cEndEl && cEndEl._flatpickr) ? cEndEl._flatpickr.input.value : "";
+  // Najsigurniji način čitanja Flatpickr vrijednosti na bilo kom uređaju:
+  const date = (dateEl && dateEl._flatpickr) ? dateEl._flatpickr.input.value : dateEl.value;
+  const chargeStart = (cStartEl && cStartEl._flatpickr) ? cStartEl._flatpickr.input.value : cStartEl.value;
+  const chargeEnd = (cEndEl && cEndEl._flatpickr) ? cEndEl._flatpickr.input.value : cEndEl.value;
 
   // 1. Validacija obaveznih polja
-  if (!driver.trim() || !vehicle.trim() || !date.trim() || !chargeStart.trim()) {
-    alert("Unesite vozača, vozilo, datum i početak punjenja.");
+  if (!driver.trim() || !vehicle.trim() || !date || !chargeStart) {
+    showModal("⚠️ Greška pri unosu", "Molimo vas da popunite sva obavezna polja:\n• Ime vozača\n• Vozilo\n• Datum\n• Početak punjenja");
     return;
   }
 
-  // 2. STROGA PROVJERA DUPLIKATA (Sada radi jer su datumi i vremena tačno izvučeni)
+  // 2. STROGA PROVJERA DUPLIKATA
   const istovremeniUnosi = globalData.filter(item => {
     return item.date === date && item.chargeStart === chargeStart;
   });
 
   if (istovremeniUnosi.length >= 2) {
-    alert(`⚠️ UNOS ODBIJEN!\n\nNa dan ${formatDatum(date)} u ${chargeStart} h već su zakazana maksimalna dva vozila na punjaču.\n\nNije moguće dodati treće vozilo u istom terminu.`);
-    return; // Potpuno blokira dodavanje i slanje na Firebase
+    showModal(
+      "⚠️ Unos odbijen", 
+      `Na dan <strong>${formatDatum(date)}</strong> u <strong>${chargeStart} h</strong> već su zakazana maksimalno dva vozila na punjaču.<br><br>Nije moguće dodati treće vozilo u istom terminu.`
+    );
+    return; // Blokira i prekida izvršavanje
   }
 
   // 3. Upis u Firebase
@@ -254,7 +252,7 @@ function addRow() {
     chargeStart,
     chargeEnd
   }).catch(function(error) {
-    alert("Greška pri upisu u bazu: " + error.message);
+    showModal("Greška", "Greška pri upisu u bazu: " + error.message);
   });
 
   // Čišćenje standardnih polja
@@ -266,6 +264,26 @@ function addRow() {
   if(dateEl && dateEl._flatpickr) dateEl._flatpickr.clear();
   if(cStartEl && cStartEl._flatpickr) cStartEl._flatpickr.clear();
   if(cEndEl && cEndEl._flatpickr) cEndEl._flatpickr.clear();
+}
+
+// Funkcije za Google Modal Pop-out prozorčić
+function showModal(title, text) {
+  const modal = document.getElementById("googleModal");
+  const modalTitle = modal.querySelector(".modal-title");
+  const modalBody = document.getElementById("modalMessage");
+  
+  if(modal && modalBody) {
+    modalTitle.innerHTML = title;
+    modalBody.innerHTML = text;
+    modal.classList.add("modal-open");
+  }
+}
+
+function closeModal() {
+  const modal = document.getElementById("googleModal");
+  if(modal) {
+    modal.classList.remove("modal-open");
+  }
 }
 
 function formatDatum(dateStr) {
