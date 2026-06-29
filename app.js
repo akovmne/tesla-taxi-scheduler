@@ -17,7 +17,6 @@ const dbRef = firebase.database().ref("raspored");
 let currentSort = "";
 let sortDirection = "asc";
 let globalData = []; 
-
 let isInitialLoad = true;
 
 window.onload = function() {
@@ -87,7 +86,6 @@ function clean(v) {
   return v && v.trim() !== "" ? v : "—";
 }
 
-// Pretvara vreme u HH:MM format
 function format24(time) {
   if (!time) return "—";
   const match = time.match(/^(\d{1,2}):(\d{2})/);
@@ -169,6 +167,7 @@ function renderTable() {
 
   if (filtered.length === 0) {
     body.innerHTML = `<tr><td colspan="7" style="text-align:center; background:#1e293b;">Nema rezultata</td></tr>`;
+    izracunajAnalitiku();
     return;
   }
 
@@ -195,6 +194,8 @@ function renderTable() {
       </tr>
     `;
   });
+
+  izracunajAnalitiku();
 }
 
 function resetFilter() {
@@ -222,22 +223,19 @@ function addRow() {
   const chargeStart = (cStartEl && cStartEl._flatpickr) ? cStartEl._flatpickr.input.value : cStartEl.value;
   const chargeEnd = (cEndEl && cEndEl._flatpickr) ? cEndEl._flatpickr.input.value : cEndEl.value;
 
-  // 1. Validacija obaveznih polja
   if (!driver.trim() || !vehicle.trim() || !date || !chargeStart) {
     showModal("⚠️ Greška pri unosu", "Molimo vas da popunite sva obavezna polja:<br>• Ime vozača<br>• Vozilo<br>• Datum<br>• Početak punjenja");
     return;
   }
 
-  // 2. DETALJNA PROVJERA DUPLIKATA SA IZVLAČENJEM DETALJA O POSTOJEĆA 2 UNOSA
   const istovremeniUnosi = globalData.filter(item => {
     return item.date === date && item.chargeStart === chargeStart;
   });
 
   if (istovremeniUnosi.length >= 2) {
-    // Generiše jasan HTML prikaz o vozilima koja već zauzimaju punjač u tom momentu
     let detaljiZauzeca = "";
     istovremeniUnosi.forEach((unos, indeks) => {
-      detaljiZauzeca += `<div style="background: #2d2f34; padding: 10px; margin: 6px 0; border-radius: 4px; border-left: 3px solid #f28b82;">
+      detaljiZauzeca += `<div style="background: #2d2f34; padding: 10px; margin: 6px 0; border-radius: 4px; border-left: 3px solid #ef4444;">
         <strong>Zauzeće ${indeks + 1}:</strong><br>
         • Vozač: ${unos.driver}<br>
         • Vozilo: ${unos.vehicle}<br>
@@ -251,10 +249,9 @@ function addRow() {
        <strong>Trenutno zauzeli:</strong><br>${detaljiZauzeca}<br>
        Nije moguće dodati treće vozilo u istom terminu.`
     );
-    return; // Stopira unos u bazu podataka
+    return;
   }
 
-  // 3. Upis u Firebase
   dbRef.push({
     driver: driver.trim(),
     vehicle: vehicle.trim(),
@@ -266,18 +263,68 @@ function addRow() {
     showModal("Greška", "Greška pri upisu u bazu: " + error.message);
   });
 
-  // Čišćenje standardnih polja
   document.getElementById("driver").value = "";
   document.getElementById("vehicle").value = "";
   document.getElementById("shift").value = "";
   
-  // Čišćenje kalendara i satova
   if(dateEl && dateEl._flatpickr) dateEl._flatpickr.clear();
   if(cStartEl && cStartEl._flatpickr) cStartEl._flatpickr.clear();
   if(cEndEl && cEndEl._flatpickr) cEndEl._flatpickr.clear();
 }
 
-// Funkcije za Google Modal Pop-out prozorčić (PC i Mobilni)
+function izracunajAnalitiku() {
+  const danas = new Date();
+  const prije30Dana = new Date();
+  prije30Dana.setDate(danas.getDate() - 30);
+
+  let ukupnoU30Dana = 0;
+  let vozilaBrojac = {};
+  let vozaciBrojac = {};
+
+  globalData.forEach(item => {
+    if (!item.date) return;
+    const datumUnosa = new Date(item.date);
+    
+    if (datumUnosa >= prije30Dana && datumUnosa <= danas) {
+      ukupnoU30Dana++;
+      if (item.vehicle && item.vehicle !== "—") {
+        vozilaBrojac[item.vehicle] = (vozilaBrojac[item.vehicle] || 0) + 1;
+      }
+      if (item.driver && item.driver !== "—") {
+        vozaciBrojac[item.driver] = (vozaciBrojac[item.driver] || 0) + 1;
+      }
+    }
+  });
+
+  let najVozilo = "—";
+  let vozilaSortirano = Object.entries(vozilaBrojac).sort((a, b) => b[1] - a[1]);
+  if (vozilaSortirano.length > 0) {
+    najVozilo = `${vozilaSortirano[0][0]} (${vozilaSortirano[0][1]}x)`;
+  }
+
+  let najVozac = "—";
+  let vozaciSortirano = Object.entries(vozaciBrojac).sort((a, b) => b[1] - a[1]);
+  if (vozaciSortirano.length > 0) {
+    najVozac = `${vozaciSortirano[0][0]} (${vozaciSortirano[0][1]}x)`;
+  }
+
+  document.getElementById("statTotal").innerText = ukupnoU30Dana;
+  document.getElementById("statTopVehicle").innerText = najVozilo;
+  document.getElementById("statTopDriver").innerText = najVozac;
+
+  const listaVozilaEl = document.getElementById("statsVehicleList");
+  listaVozilaEl.innerHTML = vozilaSortirano.length === 0 ? "<li>Nema podataka</li>" : "";
+  vozilaSortirano.slice(0, 5).forEach(([vozilo, broj]) => {
+    listaVozilaEl.innerHTML += `<li><span>🚗 ${vozilo}</span> <span><strong>${broj} puta</strong></span></li>`;
+  });
+
+  const listaVozacaEl = document.getElementById("statsDriverList");
+  listaVozacaEl.innerHTML = vozaciSortirano.length === 0 ? "<li>Nema podataka</li>" : "";
+  vozaciSortirano.slice(0, 5).forEach(([vozac, broj]) => {
+    listaVozacaEl.innerHTML += `<li><span>👤 ${vozac}</span> <span><strong>${broj}x</strong></span></li>`;
+  });
+}
+
 function showModal(title, text) {
   const modal = document.getElementById("googleModal");
   const modalTitle = modal.querySelector(".modal-title");
@@ -286,7 +333,7 @@ function showModal(title, text) {
   if(modal && modalBody) {
     modalTitle.innerHTML = title;
     modalBody.innerHTML = text;
-    modal.style.display = "flex"; // Prisilno otvaranje kontejnera na flex
+    modal.style.display = "flex";
     setTimeout(() => {
       modal.classList.add("modal-open");
     }, 10);
@@ -298,12 +345,11 @@ function closeModal() {
   if(modal) {
     modal.classList.remove("modal-open");
     setTimeout(() => {
-      modal.style.display = "none"; // Potpuno ga gasi sa ekrana nakon animacije zatvaranja
+      modal.style.display = "none";
     }, 200);
   }
 }
 
-// Zatvaranje modala klikom na tamnu pozadinu oko njega
 window.onclick = function(event) {
   const modal = document.getElementById("googleModal");
   if (event.target == modal) {
